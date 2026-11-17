@@ -1,0 +1,30 @@
+{
+  "name": "tributary",
+  "productName": "Tributary",
+  "version": "0.1.0",
+  "description": "Every inbox, one stream. A local-first desktop client that unifies Gmail, Outlook, Yahoo, iCloud, Proton and any IMAP inbox, with cross-account rules and per-sender notifications.",
+  "main": "electron/main.cjs",
+  "private": true,
+  "license": "MIT",
+  "author": "PyMite6941",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "vite build",
+    "start": "vite build && electron .",
+    "preview:web": "vite",
+    "test": "node --test \"test/*.test.cjs\"",
+    "icon": "node scripts/make-icon.mjs"
+  },
+  "dependencies": {
+    "imapflow": "^2.12.1",
+    "mailparser": "^3.14.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.3.0",
+    "electron": "^45.3.3",
+    "lucide-react": "^1.74.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "vite": "^8.3.8"
+  }
+}

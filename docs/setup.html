@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Setup guide · Tributary</title>
+  <meta name="description" content="How to connect Gmail, Outlook, Yahoo, iCloud, AOL, Proton Mail and any IMAP account to Tributary." />
+  <link rel="icon" href="assets/icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/icon.png" alt="" /> Tributary</a>
+      <div class="nav-links">
+        <a class="keep" href="./">Home</a>
+        <a class="keep" href="https://github.com/PyMite6941/tributary">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="wrap doc">
+    <h1>Setup guide</h1>
+    <p>Every provider below speaks IMAP, and Tributary uses it for all of them. The difference is how you log in. Most providers no longer accept your normal password from third-party apps, so you'll create an <strong>app password</strong> (a separate password just for Tributary) or sign in through your browser.</p>
+    <div class="toc">
+      <a href="#gmail">Gmail</a><a href="#outlook">Outlook / Hotmail</a><a href="#yahoo">Yahoo</a><a href="#icloud">iCloud</a><a href="#aol">AOL</a><a href="#proton">Proton</a><a href="#other">Other IMAP</a><a href="#rules">Rules</a><a href="#trouble">Troubleshooting</a>
+    </div>
+
+    <h2 id="gmail">Gmail</h2>
+    <ol>
+      <li>Turn on <a href="https://myaccount.google.com/signinoptions/twosv">2-Step Verification</a> for the Google account. App passwords don't exist without it.</li>
+      <li>Open <a href="https://myaccount.google.com/apppasswords">myaccount.google.com/apppasswords</a>, name it “Tributary” and copy the 16-character password.</li>
+      <li>In Tributary, choose <strong>Add inbox → Gmail</strong>, enter your address and paste the app password.</li>
+    </ol>
+    <p>IMAP access is on by default for personal Gmail accounts. School and work (Google Workspace) accounts may have app passwords turned off by an admin. If so, use <em>Sign in with Google</em> once it's set up (see <a href="#oauth">browser sign-in</a>).</p>
+
+    <h2 id="outlook">Outlook, Hotmail, Live</h2>
+    <p>Microsoft turned off password logins for IMAP on consumer accounts, so Outlook only works through <strong>browser sign-in</strong>. Choose <strong>Add inbox → Outlook</strong> and click <em>Sign in</em>. Your browser opens to Microsoft's login page. Tributary never sees your password; it receives a token it can use to read your mail.</p>
+    <div class="callout">Browser sign-in needs a one-time app registration with Microsoft. See <a href="#oauth">browser sign-in setup</a>.</div>
+
+    <h2 id="yahoo">Yahoo Mail</h2>
+    <ol>
+      <li>Go to <a href="https://login.yahoo.com/account/security">Account Security</a>.</li>
+      <li>Choose <strong>Generate app password</strong>, name it “Tributary” and copy it.</li>
+      <li>Add it under <strong>Add inbox → Yahoo Mail</strong>.</li>
+    </ol>
+
+    <h2 id="icloud">iCloud Mail</h2>
+    <ol>
+      <li>Sign in at <a href="https://account.apple.com">account.apple.com</a> → <strong>Sign-In and Security → App-Specific Passwords</strong>.</li>
+      <li>Generate one and add it under <strong>Add inbox → iCloud Mail</strong>. Use your full <code>@icloud.com</code> address.</li>
+    </ol>
+
+    <h2 id="aol">AOL Mail</h2>
+    <p>Same as Yahoo. In AOL Account Security, use <strong>Generate app password</strong>.</p>
+
+    <h2 id="proton">Proton Mail</h2>
+    <p>Proton encrypts mail end-to-end, so it can't offer plain IMAP from its servers. Instead it ships <a href="https://proton.me/mail/bridge">Proton Mail Bridge</a>, a small program that runs on your computer, decrypts your mail locally and serves it over IMAP on <code>127.0.0.1</code>. Bridge needs a paid Proton plan.</p>
+    <ol>
+      <li>Install Bridge, sign in and leave it running.</li>
+      <li>In Bridge, open your account's <strong>Mailbox configuration</strong>. Copy the IMAP username and the Bridge password, not your Proton password.</li>
+      <li>In Tributary choose <strong>Add inbox → Proton Mail (via Bridge)</strong>. The host (<code>127.0.0.1</code>) and port (<code>1143</code>, STARTTLS) are filled in for you.</li>
+    </ol>
+    <div class="callout">Bridge uses a self-signed certificate. Tributary skips certificate checks for loopback addresses only (<code>127.0.0.1</code> / <code>localhost</code>). Every other server must present a valid certificate.</div>
+
+    <h2 id="other">Any other IMAP server</h2>
+    <p>Fastmail, Zoho, GMX, a school or company server: choose <strong>Other IMAP server</strong> and enter the host and port from your provider's help page. Port <code>993</code> with TLS is the common setup. Turn TLS off only for STARTTLS servers on port <code>143</code>.</p>
+
+    <h2 id="rules">Rules and notifications</h2>
+    <h3>Get notified by one sender</h3>
+    <p>Open any email from them and click <strong>Notify me</strong> in the toolbar. From then on, every new email from that address on any account sends a desktop notification. Click again to stop.</p>
+    <h3>Sort senders into views</h3>
+    <p>Click <strong>Make rule</strong> on a message, or open <strong>Rules &amp; filters</strong> in the sidebar. Some examples:</p>
+    <ul>
+      <li><strong>College</strong>: sender domain <em>ends with</em> <code>.edu</code>, then put in view “College” and notify</li>
+      <li><strong>Dev</strong>: sender domain <em>ends with</em> <code>github.com</code>, then put in view “Dev”</li>
+      <li><strong>Receipts</strong>: subject <em>matches regex</em> <code>(receipt|order|invoice)</code>, then view “Receipts” and mark as read</li>
+      <li><strong>Newsletters</strong>: match <em>any</em> of sender <em>contains</em> <code>newsletter</code> or <code>substack</code>, then keep out of All inboxes</li>
+    </ul>
+    <p>Rules are evaluated live. Editing a rule re-sorts your existing mail right away, not just new messages.</p>
+
+    <h2 id="oauth">Browser sign-in setup</h2>
+    <p>Browser sign-in uses OAuth 2.0 with PKCE and a one-time loopback redirect on <code>127.0.0.1</code>. You register Tributary once with each provider and put the client IDs in <code>oauth.config.json</code> next to <code>package.json</code>:</p>
+<pre><code>{
+  "microsoft": { "clientId": "00000000-0000-0000-0000-000000000000" },
+  "google":    { "clientId": "....apps.googleusercontent.com", "clientSecret": "GOCSPX-..." }
+}</code></pre>
+    <h3>Microsoft (Outlook)</h3>
+    <ol>
+      <li>Open <a href="https://entra.microsoft.com">Microsoft Entra admin center</a> → <strong>App registrations → New registration</strong>.</li>
+      <li>Supported account types: <em>Personal Microsoft accounts</em> (add “and any organizational directory” to also support school and work accounts).</li>
+      <li>Redirect URI: platform <strong>Public client/native (mobile &amp; desktop)</strong>, value <code>http://localhost</code>.</li>
+      <li>Under <strong>API permissions</strong> add <em>Office 365 Exchange Online → IMAP.AccessAsUser.All</em> (delegated), plus <code>offline_access</code>, <code>openid</code> and <code>email</code>.</li>
+      <li>Copy the <strong>Application (client) ID</strong>.</li>
+    </ol>
+    <h3>Google (optional; app passwords work without it)</h3>
+    <ol>
+      <li>In Google Cloud Console, create a project and set up the <strong>OAuth consent screen</strong>. While it's in <em>Testing</em>, add yourself as a test user.</li>
+      <li><strong>Credentials → Create credentials → OAuth client ID → Desktop app</strong>.</li>
+      <li>Copy the client ID and secret. Google documents desktop-app secrets as not confidential.</li>
+    </ol>
+    <div class="callout">Google's <code>https://mail.google.com/</code> scope is restricted. While the consent screen stays in Testing mode, refresh tokens expire after 7 days and you'll be asked to sign in again. For personal use, app passwords avoid this.</div>
+
+    <h2 id="trouble">Troubleshooting</h2>
+    <ul>
+      <li><strong>“Login rejected”</strong> almost always means the normal password was used instead of an app password, or the app password has a typo. Spaces in Google app passwords don't matter.</li>
+      <li><strong>Red dot next to an account</strong>: open Settings to see the error. Tributary retries on its own, with increasing delays up to 5 minutes.</li>
+      <li><strong>Proton “connection refused”</strong>: Bridge isn't running.</li>
+      <li><strong>No notifications on Windows</strong>: check <em>Settings → System → Notifications</em> and make sure Tributary is allowed and Focus is off.</li>
+    </ul>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>Tributary · MIT licensed</span>
+      <span><a href="./">Home</a> · <a href="https://github.com/PyMite6941/tributary/issues">Report an issue</a></span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tributary — every inbox, one stream</title>
+  <meta name="description" content="A local-first desktop app that unifies Gmail, Outlook, Yahoo, iCloud, Proton and any IMAP inbox, with cross-account rules and notifications for the senders you care about." />
+  <meta property="og:title" content="Tributary — every inbox, one stream" />
+  <meta property="og:description" content="Unify all your email accounts. Filter by sender across every inbox. Get notified only for the people that matter." />
+  <meta property="og:image" content="assets/screenshot-reader.png" />
+  <link rel="icon" href="assets/icon.png" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap">
+      <a class="brand" href="./"><img src="assets/icon.png" alt="" /> Tributary</a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#rules">Rules</a>
+        <a href="#privacy">Privacy</a>
+        <a class="keep" href="setup.html">Setup guide</a>
+        <a class="keep" href="https://github.com/PyMite6941/tributary">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · open source · Windows desktop</span>
+      <h1>Every inbox,<br /><span class="grad">one stream.</span></h1>
+      <p class="lede">Tributary pulls Gmail, Outlook, Yahoo, iCloud, Proton and any IMAP account into one fast desktop app. You can sort senders across all of them and get notified only by the people you choose.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/PyMite6941/tributary/releases">Download for Windows</a>
+        <a class="btn" href="https://github.com/PyMite6941/tributary">View source</a>
+      </div>
+      <p class="note">No account, no server, no telemetry. It runs on your computer and talks directly to your mail providers.</p>
+      <img class="shot" src="assets/screenshot-reader.png" alt="Tributary showing a unified inbox with College and Dev views, and an email open in the reader" width="1362" height="817" />
+      <div class="providers">
+        <span>Gmail</span><span>Outlook / Hotmail</span><span>Yahoo</span><span>iCloud</span><span>AOL</span><span>Proton (Bridge)</span><span>Any IMAP server</span>
+      </div>
+    </div>
+  </header>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>Built for people with too many inboxes</h2>
+      <p class="section-lede">School, personal, the old Yahoo you still get receipts on. Tributary puts them in one stream and keeps each account visible through its own color.</p>
+      <div class="grid3">
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+          <h3>Unified inbox</h3>
+          <p>All accounts in one list, grouped by day. A color stripe on each message shows which inbox it came from.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+          <h3>Priority senders</h3>
+          <p>One click on <em>Notify me</em> and that sender gets a desktop notification, whichever account they write to. Everything else stays quiet.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M7 12h10M10 18h4"/></svg></div>
+          <h3>Rules that span accounts</h3>
+          <p>Send <code>*.edu</code> into “College” and GitHub into “Dev”, and mark newsletters as read. Each rule applies to every inbox at once.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          <h3>Real-time</h3>
+          <p>Tributary keeps a live IMAP IDLE connection open, so new mail arrives within seconds without polling.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/><path d="M2 2l20 20"/></svg></div>
+          <h3>Tracking pixels blocked</h3>
+          <p>Remote images stay off until you load them for a message. Email HTML is sandboxed and its scripts never run.</p>
+        </div>
+        <div class="card">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg></div>
+          <h3>Keyboard first</h3>
+          <p><code>j</code>/<code>k</code> to move, <code>e</code> to archive, <code>s</code> to star, <code>u</code> for unread and <code>/</code> to search. If you know Gmail's shortcuts, you know these.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rules">
+    <div class="wrap split">
+      <div class="split-text">
+        <h2>Filter by sender, domain, subject or account</h2>
+        <p class="section-lede">A rule matches <em>all</em> or <em>any</em> of its conditions and then does one or more things.</p>
+        <ul class="checks">
+          <li>Put the message in a named view in the sidebar</li>
+          <li>Send a desktop notification</li>
+          <li>Mark it as read automatically</li>
+          <li>Keep it out of “All inboxes” but still show it in its view</li>
+          <li>Match with <code>contains</code>, <code>is</code>, <code>starts with</code>, <code>ends with</code> or a regex</li>
+        </ul>
+      </div>
+      <img src="assets/screenshot-rules.png" alt="The rules editor: sender domain ends with github.com, put in view Dev" loading="lazy" width="1362" height="817" />
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap split rev">
+      <div class="split-text">
+        <h2>Add any inbox in under a minute</h2>
+        <p class="section-lede">Pick your provider and paste an app password, or sign in through your browser for Outlook and Gmail. The <a href="setup.html">setup guide</a> walks through every provider.</p>
+      </div>
+      <img src="assets/screenshot-account.png" alt="The Add an inbox dialog listing Gmail, Outlook, Yahoo, iCloud, AOL, Proton and other IMAP" loading="lazy" width="1362" height="817" />
+    </div>
+  </section>
+
+  <section id="privacy" class="privacy">
+    <div class="wrap">
+      <h2>Your mail never touches our servers, because there aren't any</h2>
+      <p class="section-lede">Tributary is a desktop program, not a web service. It connects straight from your computer to Google, Microsoft, Yahoo and the rest.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>What</th><th>Where it lives</th></tr></thead>
+          <tbody>
+            <tr><td>App passwords &amp; sign-in tokens</td><td>Encrypted with your OS keystore (Windows DPAPI / macOS Keychain) in your user profile</td></tr>
+            <tr><td>Message list cache</td><td>Sender, subject and date for recent INBOX mail, stored as local JSON so startup is instant</td></tr>
+            <tr><td>Message bodies</td><td>Fetched from your provider when you open a message and never written to disk</td></tr>
+            <tr><td>Rules &amp; settings</td><td>Local JSON in your user profile</td></tr>
+            <tr><td>Analytics / telemetry</td><td>None</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <span>Tributary · MIT licensed · built by <a href="https://github.com/PyMite6941">PyMite6941</a></span>
+      <span><a href="setup.html">Setup guide</a> · <a href="https://github.com/PyMite6941/tributary/issues">Report an issue</a></span>
+    </div>
+  </footer>
+</body>
+</html>
