@@ -42,7 +42,7 @@ $env:TRIBUTARY_SHOT="$PWD\docs\assets\screenshot-reader.png"; npm start
 
 ### OAuth setup
 
-Outlook needs a Microsoft app registration, and Gmail can optionally use one. Put the IDs in `oauth.config.json` in the project root (gitignored) or in the app's userData folder:
+Outlook needs a Microsoft app registration, and Gmail can optionally use one. Paste the IDs into **Settings → Sign-in providers** (saved to `userData/oauth.config.json`), or put them in `oauth.config.json` in the project root (gitignored):
 
 ```json
 {
@@ -52,6 +52,12 @@ Outlook needs a Microsoft app registration, and Gmail can optionally use one. Pu
 ```
 
 Step-by-step registration for both: [docs/setup.html#oauth](docs/setup.html#oauth).
+
+### How credentials are kept
+
+- Sign-in stores the provider's **refresh token**, or the app password, encrypted with `safeStorage` (DPAPI on Windows), in `userData/accounts.json`. There are no cookies and no stored account passwords.
+- Access tokens live in memory only and refresh 5 minutes before they expire. Microsoft's rotated refresh tokens are re-encrypted and saved.
+- When the server rejects an access token, it is dropped and refreshed once. If the refresh returns `invalid_grant`, an app password is rejected, or a fresh token is rejected again, the session **stops** in a `reauth` state. It doesn't loop on bad credentials, which can lock accounts. The UI then shows a banner, a single notification, and *Sign in again* / *new app password* in Settings (`account:reauth` keeps the account's id, cache, and rules). Covered by `test/session-auth.test.cjs` against a fake IMAP server.
 
 ## Layout
 

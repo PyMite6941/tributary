@@ -67,7 +67,12 @@ async function postForm(url, params) {
     body: new URLSearchParams(params),
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.error_description || json.error || `Token endpoint returned ${res.status}`);
+  if (!res.ok) {
+    const err = new Error(json.error_description || json.error || `Token endpoint returned ${res.status}`);
+    // invalid_grant = the refresh token was revoked, expired, or the password changed. Only a new sign-in fixes it.
+    err.reauth = json.error === 'invalid_grant';
+    throw err;
+  }
   return json;
 }
 
@@ -170,9 +175,23 @@ async function refresh(provider, refreshToken) {
   };
 }
 
+// Settings -> Sign-in providers writes here, so nobody has to hand-edit JSON.
+function saveConfig(next) {
+  const file = path.join(app.getPath('userData'), 'oauth.config.json');
+  const clean = {};
+  for (const k of ['google', 'microsoft']) {
+    const c = next[k] || {};
+    if (c.clientId?.trim()) {
+      clean[k] = { clientId: c.clientId.trim(), ...(c.clientSecret?.trim() ? { clientSecret: c.clientSecret.trim() } : {}) };
+    }
+  }
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(clean, null, 2));
+}
+
 function configured() {
   const c = loadConfig();
   return { google: !!c.google?.clientId, microsoft: !!c.microsoft?.clientId };
 }
 
-module.exports = { signIn, refresh, configured };
+module.exports = { signIn, refresh, configured, loadConfig, saveConfig };

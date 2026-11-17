@@ -80,7 +80,7 @@
     <p>Rules are evaluated live. Editing a rule re-sorts your existing mail right away, not just new messages.</p>
 
     <h2 id="oauth">Browser sign-in setup</h2>
-    <p>Browser sign-in uses OAuth 2.0 with PKCE and a one-time loopback redirect on <code>127.0.0.1</code>. You register Tributary once with each provider and put the client IDs in <code>oauth.config.json</code> next to <code>package.json</code>:</p>
+    <p>Browser sign-in uses OAuth 2.0 with PKCE and a one-time loopback redirect on <code>127.0.0.1</code>. You register Tributary once with each provider, then paste the IDs into <strong>Settings → Sign-in providers</strong>. That's all; Gmail then defaults to one-click <em>Sign in with Google</em>. (Developers can also put them in <code>oauth.config.json</code> next to <code>package.json</code>.)</p>
 <pre><code>{
   "microsoft": { "clientId": "00000000-0000-0000-0000-000000000000" },
   "google":    { "clientId": "....apps.googleusercontent.com", "clientSecret": "GOCSPX-..." }
@@ -101,10 +101,18 @@
     </ol>
     <div class="callout">Google's <code>https://mail.google.com/</code> scope is restricted. While the consent screen stays in Testing mode, refresh tokens expire after 7 days and you'll be asked to sign in again. For personal use, app passwords avoid this.</div>
 
+    <h2 id="staying-signed-in">Staying signed in</h2>
+    <ul>
+      <li>After you sign in, Tributary keeps the provider's long-lived <em>refresh token</em> (or your app password), encrypted with Windows' DPAPI keystore. It never stores your real account password, and it never saves cookies.</li>
+      <li>Short-lived access tokens refresh in the background before they expire, so you stay signed in across restarts and reboots.</li>
+      <li>If a provider revokes access (you changed your password, removed the app from your Google/Microsoft account, or a Google test-mode token hit its 7-day limit), Tributary <strong>stops trying</strong> instead of hammering the server with bad credentials. You get one notification, a banner in the app, and a <em>Sign in again</em> button in Settings. Your rules, colors and cached mail are kept.</li>
+    </ul>
+
     <h2 id="trouble">Troubleshooting</h2>
     <ul>
       <li><strong>“Login rejected”</strong> almost always means the normal password was used instead of an app password, or the app password has a typo. Spaces in Google app passwords don't matter.</li>
-      <li><strong>Red dot next to an account</strong>: open Settings to see the error. Tributary retries on its own, with increasing delays up to 5 minutes.</li>
+      <li><strong>Red dot next to an account</strong>: a network problem. Tributary retries on its own, with increasing delays up to 5 minutes.</li>
+      <li><strong>Amber dot / “needs sign-in”</strong>: the credentials were rejected. Use <em>Sign in again</em> or enter a new app password in Settings.</li>
       <li><strong>Proton “connection refused”</strong>: Bridge isn't running.</li>
       <li><strong>No notifications on Windows</strong>: check <em>Settings → System → Notifications</em> and make sure Tributary is allowed and Focus is off.</li>
     </ul>

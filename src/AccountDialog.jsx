@@ -24,7 +24,7 @@ export default function AccountDialog({ onClose }) {
     setShowAdvanced(p.id === 'custom');
     setForm({
       provider: p.id,
-      authType: p.auth,
+      authType: p.oauth && catalog.oauth[p.oauth] ? 'oauth' : p.auth,
       host: p.host,
       port: p.port,
       secure: p.secure,
@@ -120,11 +120,20 @@ export default function AccountDialog({ onClose }) {
           {form.authType === 'oauth' ? (
             <div className="oauth-box">
               {oauthReady ? (
-                <p>Your browser will open so you can sign in. Tributary never sees your password.</p>
+                <p>
+                  Your browser opens so you can sign in with {preset.oauth === 'google' ? 'Google' : 'Microsoft'}. Tributary never sees your
+                  password; it stores an encrypted sign-in token and stays signed in.
+                </p>
               ) : (
                 <p className="warn">
-                  <AlertCircle size={15} /> Browser sign-in needs a {preset.oauth === 'google' ? 'Google' : 'Microsoft'} OAuth client ID in
-                  <code>oauth.config.json</code>. See the README's “OAuth setup” section.
+                  <AlertCircle size={15} />
+                  <span>
+                    Browser sign-in needs a {preset.oauth === 'google' ? 'Google' : 'Microsoft'} client ID first. Add it once under{' '}
+                    <strong>Settings → Sign-in providers</strong>.{' '}
+                    <a href="#" onClick={(e) => (e.preventDefault(), api.openExternal('https://pymite6941.github.io/tributary/setup.html#oauth'))}>
+                      How to get one
+                    </a>
+                  </span>
                 </p>
               )}
             </div>

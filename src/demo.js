@@ -5,9 +5,9 @@ const ago = (h) => new Date(Date.now() - h * H).toISOString();
 
 const accounts = [
   { id: 'a1', email: 'alex.rivera@gmail.com', label: 'Personal', provider: 'gmail', color: '#4f8cff', status: 'online' },
-  { id: 'a2', email: 'arivera@outlook.com', label: 'School', provider: 'outlook', color: '#2bb39a', status: 'online' },
+  { id: 'a2', email: 'arivera@outlook.com', label: 'School', provider: 'outlook', authType: 'oauth', color: '#2bb39a', status: 'online' },
   { id: 'a3', email: 'alexr@yahoo.com', label: 'Old', provider: 'yahoo', color: '#e0a33a', status: 'online' },
-  { id: 'a4', email: 'alex@proton.me', label: 'Private', provider: 'proton', color: '#9a6bff', status: 'error', error: 'Proton Mail Bridge is not running' },
+  { id: 'a4', email: 'alex@proton.me', label: 'Private', provider: 'proton', color: '#9a6bff', status: 'reauth', authType: 'password', error: 'Login rejected. Use an app password, not your normal password.' },
 ];
 
 let rules = [
@@ -115,6 +115,10 @@ export const demoApi = {
   updateAccount: async () => {},
   removeAccount: async () => {},
   reconnectAccount: async () => {},
+  reauthAccount: async () => { throw new Error('Demo mode: run the desktop app to connect real accounts.'); },
+  getOAuthConfig: async () => ({}),
+  saveOAuthConfig: async () => {},
+  onOpenSettings: () => () => {},
   saveRules: async (r) => { rules = r; emit(); },
   saveSettings: async (s) => { settings = { ...settings, ...s }; emit(); },
   getBody: async (key) => {

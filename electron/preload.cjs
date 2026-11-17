@@ -15,6 +15,9 @@ contextBridge.exposeInMainWorld('tributary', {
   updateAccount: (id, patch) => call('account:update', id, patch),
   removeAccount: (id) => call('account:remove', id),
   reconnectAccount: (id) => call('account:reconnect', id),
+  reauthAccount: (id, draft) => call('account:reauth', id, draft),
+  getOAuthConfig: () => call('oauth:getConfig'),
+  saveOAuthConfig: (cfg) => call('oauth:saveConfig', cfg),
   saveRules: (rules) => call('rules:save', rules),
   saveSettings: (s) => call('settings:save', s),
   getBody: (key) => call('mail:body', key),
@@ -26,6 +29,11 @@ contextBridge.exposeInMainWorld('tributary', {
     const h = (_e, s) => fn(s);
     ipcRenderer.on('state', h);
     return () => ipcRenderer.removeListener('state', h);
+  },
+  onOpenSettings: (fn) => {
+    const h = () => fn();
+    ipcRenderer.on('ui:settings', h);
+    return () => ipcRenderer.removeListener('ui:settings', h);
   },
   onOpenMessage: (fn) => {
     const h = (_e, key) => fn(key);

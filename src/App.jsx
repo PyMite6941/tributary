@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, AlertCircle } from 'lucide-react';
 import { api, params } from './api.js';
 import Sidebar from './Sidebar.jsx';
 import MessageList from './MessageList.jsx';
@@ -43,7 +43,7 @@ export default function App() {
   const [view, setView] = useState('all');
   const [selected, setSelected] = useState(() => params.get('view') === 'reader' ? 'a2:1' : null);
   const [query, setQuery] = useState('');
-  const [dialog, setDialog] = useState(() => ({ rules: 'rules', account: 'account' })[params.get('view')] || null); // 'account' | 'rules' | 'settings'
+  const [dialog, setDialog] = useState(() => ({ rules: 'rules', account: 'account', settings: 'settings' })[params.get('view')] || null); // 'account' | 'rules' | 'settings'
   const [ruleDraft, setRuleDraft] = useState(null); // prefilled rule when opening the rules dialog
   const [toast, setToast] = useState(null);
 
@@ -54,9 +54,11 @@ export default function App() {
       setView('all');
       setSelected(key);
     });
+    const offSettings = api.onOpenSettings(() => setDialog('settings'));
     return () => {
       offState();
       offOpen();
+      offSettings();
     };
   }, []);
 
@@ -148,6 +150,7 @@ export default function App() {
   };
 
   if (!state) return <div className="boot" />;
+  const needSignIn = accounts.filter((a) => a.status === 'reauth');
 
   return (
     <div className="app">
@@ -232,6 +235,18 @@ export default function App() {
       )}
       {dialog === 'settings' && (
         <SettingsDialog state={state} onClose={() => setDialog(null)} onError={showError} />
+      )}
+
+      {needSignIn.length > 0 && !dialog && (
+        <div className="reauth-banner" role="status">
+          <AlertCircle size={15} />
+          <span>
+            {needSignIn.map((a) => a.email).join(', ')} {needSignIn.length === 1 ? 'needs' : 'need'} you to sign in again.
+          </span>
+          <button className="btn small primary" onClick={() => setDialog('settings')}>
+            Fix
+          </button>
+        </div>
       )}
 
       {toast && (

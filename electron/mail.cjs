@@ -64,6 +64,7 @@ class AccountSession extends EventEmitter {
     this.backoff = 2000;
     this.retryTimer = null;
     this.resyncTimer = null;
+    this.authFailures = 0;
   }
 
   snapshot() {
@@ -140,13 +141,23 @@ class AccountSession extends EventEmitter {
       this.uidValidity = String(box.uidValidity);
       await this.fullSync(box.exists);
       this.backoff = 2000;
+      this.authFailures = 0;
       this.setStatus('online');
       // imapflow drops into IDLE by itself once the connection goes quiet.
     } catch (e) {
       this.client = null;
       client?.close();
+      if (e.authenticationFailed) this.authFailures++;
+      // Stop retrying when only the user can fix it: a revoked/expired OAuth grant, a wrong app password,
+      // or an OAuth token the server still rejects after a forced refresh. Hammering a bad password can get
+      // the account temporarily locked by the provider.
+      const needsUser = e.reauth || (e.authenticationFailed && (a.authType !== 'oauth' || this.authFailures >= 2));
+      if (needsUser) {
+        this.setStatus('reauth', a.authType === 'oauth' ? 'Sign-in expired or was revoked. Sign in again.' : friendlyError(e, a.host));
+        return;
+      }
       this.setStatus('error', friendlyError(e, a.host));
-      this.emit('auth-failed', !!e.authenticationFailed);
+      if (e.authenticationFailed) this.emit('auth-failed');
       this.scheduleReconnect();
     }
   }

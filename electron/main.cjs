@@ -58,7 +58,9 @@ function persist(session) {
 function startSession(account) {
   const s = new AccountSession(account, authGetter(account), store.loadCache(account.id), settings.messagesPerAccount);
   s.on('status', () => broadcast());
-  s.on('auth-failed', (isAuth) => isAuth && tokenCache.delete(account.id));
+  // The server rejected our access token: drop it so the next attempt forces a refresh.
+  s.on('auth-failed', () => tokenCache.delete(account.id));
+  s.on('status', ({ status }) => status === 'reauth' && notifyReauth(account));
   s.on('changed', (added) => {
     persist(s);
     handleNewMail(s, added);
@@ -80,6 +82,18 @@ function handleNewMail(session, added) {
     if (r.markRead && !msg.seen) session.setSeen(msg.uid, true).catch(() => {});
     if ((r.notify || (settings.notifyAllNew && !r.hide)) && !msg.seen) notify(msg, r);
   }
+}
+
+const reauthNotified = new Set();
+function notifyReauth(account) {
+  if (reauthNotified.has(account.id) || !Notification.isSupported()) return;
+  reauthNotified.add(account.id);
+  const n = new Notification({ title: 'Tributary needs you to sign in again', body: account.email, icon: ICON });
+  n.on('click', () => {
+    showWindow();
+    win?.webContents.send('ui:settings');
+  });
+  n.show();
 }
 
 function notify(msg, r) {
@@ -253,12 +267,14 @@ function registerIpc() {
     if (draft.authType === 'oauth') {
       const result = await oauth.signIn(preset.oauth);
       if (!result.refreshToken) throw new Error('The provider did not return a refresh token.');
+      if (!result.email) throw new Error('The provider did not say which address you signed in with.');
       account = {
         email: result.email,
         user: result.email,
         authType: 'oauth',
         oauthProvider: preset.oauth,
         secret: store.encrypt(result.refreshToken),
+        _token: { accessToken: result.accessToken, expiresAt: result.expiresAt },
       };
     } else {
       const t = await testConnection({
@@ -283,6 +299,9 @@ function registerIpc() {
       secure: draft.secure ?? preset.secure,
       archive: preset.archive || null,
     });
+    // Reuse the access token from sign-in so the first connection doesn't need an extra refresh.
+    if (account._token) tokenCache.set(account.id, account._token);
+    delete account._token;
     accounts.push(account);
     store.saveAccounts(accounts);
     startSession(account);
@@ -306,6 +325,34 @@ function registerIpc() {
     store.dropCache(id);
     broadcast();
   });
+
+  // Fix an account whose sign-in expired or whose app password changed, keeping its cache, color and rules.
+  handle('account:reauth', async (id, draft = {}) => {
+    const a = accounts.find((x) => x.id === id);
+    if (!a) throw new Error('Account not found');
+    if (a.authType === 'oauth') {
+      const result = await oauth.signIn(a.oauthProvider);
+      if (result.email && result.email.toLowerCase() !== a.email.toLowerCase()) {
+        throw new Error(`You signed in as ${result.email}, but this inbox is ${a.email}. Sign in with ${a.email}.`);
+      }
+      if (!result.refreshToken) throw new Error('The provider did not return a refresh token.');
+      a.secret = store.encrypt(result.refreshToken);
+      tokenCache.set(a.id, { accessToken: result.accessToken, expiresAt: result.expiresAt });
+    } else {
+      if (!draft.password) throw new Error('Enter the new app password.');
+      const t = await testConnection({ host: a.host, port: a.port, secure: a.secure, auth: { user: a.user, pass: draft.password } });
+      if (!t.ok) throw new Error(t.error);
+      a.secret = store.encrypt(draft.password);
+    }
+    store.saveAccounts(accounts);
+    reauthNotified.delete(a.id);
+    await stopSession(a.id);
+    startSession(a);
+    broadcast();
+  });
+
+  handle('oauth:getConfig', () => oauth.loadConfig());
+  handle('oauth:saveConfig', (cfg) => oauth.saveConfig(cfg));
 
   handle('account:reconnect', async (id) => {
     await stopSession(id);
