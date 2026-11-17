@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest an idea
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the problem, not just the solution. E.g. "I get 40 school emails a day and only care about 3 teachers."
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How would you like it to work?

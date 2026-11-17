@@ -97,10 +97,16 @@ function AccountRow({ a, onError }) {
 // Client IDs for browser sign-in. Stored in userData/oauth.config.json by the main process.
 function ProvidersSection({ onError }) {
   const [cfg, setCfg] = useState(null);
+  const [builtIn, setBuiltIn] = useState([]);
   const [saved, setSaved] = useState(false);
   useEffect(() => {
-    api.getOAuthConfig().then((c) => setCfg({ google: { clientId: '', clientSecret: '', ...c.google }, microsoft: { clientId: '', ...c.microsoft } }));
+    api.getOAuthConfig().then((c) => {
+      setBuiltIn(c.builtIn || []);
+      setCfg({ google: { clientId: '', clientSecret: '', ...c.google }, microsoft: { clientId: '', ...c.microsoft } });
+    });
   }, []);
+  // Release builds can ship with client IDs; then fields only override them and blank means "use the built-in one".
+  const hint = (prov, fallback) => (builtIn.includes(prov) ? 'Built in (leave blank to use it)' : fallback);
   if (!cfg) return null;
   const set = (prov, k) => (e) => {
     setSaved(false);
@@ -118,7 +124,9 @@ function ProvidersSection({ onError }) {
     <>
       <h4>Sign-in providers</h4>
       <p className="muted small">
-        Browser sign-in (“Sign in with Google / Microsoft”) needs one-time app registrations.{' '}
+        {builtIn.length === 2
+          ? 'This build already includes Google and Microsoft sign-in. You only need these fields to use your own app registrations. '
+          : 'Browser sign-in (“Sign in with Google / Microsoft”) needs one-time app registrations. '}
         <a href="#" onClick={(e) => (e.preventDefault(), api.openExternal('https://pymite6941.github.io/tributary/setup.html#oauth'))}>
           How to get these
         </a>
@@ -126,15 +134,15 @@ function ProvidersSection({ onError }) {
       <div className="oauth-grid">
         <label>
           Google client ID
-          <input value={cfg.google.clientId} onChange={set('google', 'clientId')} placeholder="….apps.googleusercontent.com" />
+          <input value={cfg.google.clientId} onChange={set('google', 'clientId')} placeholder={hint('google', '….apps.googleusercontent.com')} />
         </label>
         <label>
           Google client secret
-          <input type="password" value={cfg.google.clientSecret} onChange={set('google', 'clientSecret')} placeholder="GOCSPX-…" autoComplete="off" />
+          <input type="password" value={cfg.google.clientSecret} onChange={set('google', 'clientSecret')} placeholder={hint('google', 'GOCSPX-…')} autoComplete="off" />
         </label>
         <label>
           Microsoft client ID
-          <input value={cfg.microsoft.clientId} onChange={set('microsoft', 'clientId')} placeholder="00000000-0000-…" />
+          <input value={cfg.microsoft.clientId} onChange={set('microsoft', 'clientId')} placeholder={hint('microsoft', '00000000-0000-…')} />
         </label>
         <div className="oauth-save">
           <button className="btn small" onClick={save}>

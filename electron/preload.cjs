@@ -8,6 +8,7 @@ async function call(channel, ...args) {
 }
 
 contextBridge.exposeInMainWorld('tributary', {
+  platform: process.platform,
   getState: () => call('state:get'),
   listProviders: () => call('providers:list'),
   testAccount: (draft) => call('account:test', draft),

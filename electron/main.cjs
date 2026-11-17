@@ -351,7 +351,7 @@ function registerIpc() {
     broadcast();
   });
 
-  handle('oauth:getConfig', () => oauth.loadConfig());
+  handle('oauth:getConfig', () => ({ ...oauth.userConfig(), builtIn: oauth.builtInProviders() }));
   handle('oauth:saveConfig', (cfg) => oauth.saveConfig(cfg));
 
   handle('account:reconnect', async (id) => {

@@ -23,7 +23,7 @@
     <h1>Setup guide</h1>
     <p>Every provider below speaks IMAP, and Tributary uses it for all of them. The difference is how you log in. Most providers no longer accept your normal password from third-party apps, so you'll create an <strong>app password</strong> (a separate password just for Tributary) or sign in through your browser.</p>
     <div class="toc">
-      <a href="#gmail">Gmail</a><a href="#outlook">Outlook / Hotmail</a><a href="#yahoo">Yahoo</a><a href="#icloud">iCloud</a><a href="#aol">AOL</a><a href="#proton">Proton</a><a href="#other">Other IMAP</a><a href="#rules">Rules</a><a href="#trouble">Troubleshooting</a>
+      <a href="#install">Installing</a><a href="#gmail">Gmail</a><a href="#outlook">Outlook / Hotmail</a><a href="#yahoo">Yahoo</a><a href="#icloud">iCloud</a><a href="#aol">AOL</a><a href="#proton">Proton</a><a href="#other">Other IMAP</a><a href="#rules">Rules</a><a href="#trouble">Troubleshooting</a>
     </div>
 
     <h2 id="gmail">Gmail</h2>
@@ -53,6 +53,14 @@
 
     <h2 id="aol">AOL Mail</h2>
     <p>Same as Yahoo. In AOL Account Security, use <strong>Generate app password</strong>.</p>
+
+    <h2 id="install">Installing</h2>
+    <p>Download the installer for your system from <a href="https://github.com/PyMite6941/tributary/releases/latest">Releases</a>. The builds aren't code-signed yet:</p>
+    <ul>
+      <li><strong>Windows:</strong> if you see <em>“Windows protected your PC”</em>, click <strong>More info → Run anyway</strong>.</li>
+      <li><strong>macOS:</strong> right-click Tributary in Applications and choose <strong>Open</strong> the first time.</li>
+      <li><strong>Linux:</strong> make the <code>.AppImage</code> executable (<code>chmod +x</code>), or install the <code>.deb</code>.</li>
+    </ul>
 
     <h2 id="proton">Proton Mail</h2>
     <p>Proton encrypts mail end-to-end, so it can't offer plain IMAP from its servers. Instead it ships <a href="https://proton.me/mail/bridge">Proton Mail Bridge</a>, a small program that runs on your computer, decrypts your mail locally and serves it over IMAP on <code>127.0.0.1</code>. Bridge needs a paid Proton plan.</p>

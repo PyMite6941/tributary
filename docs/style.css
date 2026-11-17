@@ -84,6 +84,7 @@ h2 { font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.8px; line-height: 1.1
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
 .card h3 { margin: 12px 0 6px; font-size: 17px; }
 .card p { margin: 0; color: var(--text-2); font-size: 15px; }
+.step { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--teal), var(--accent)); color: #fff; font-weight: 700; font-size: 15px; }
 .icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
 .icon svg { width: 20px; height: 20px; }
 

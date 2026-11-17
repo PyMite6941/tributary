@@ -13,7 +13,8 @@
     "start": "vite build && electron .",
     "preview:web": "vite",
     "test": "node --test \"test/*.test.cjs\"",
-    "icon": "node scripts/make-icon.mjs"
+    "icon": "node scripts/make-icon.mjs",
+    "dist": "vite build && electron-builder --publish never"
   },
   "dependencies": {
     "imapflow": "^2.12.1",
@@ -22,9 +23,84 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^6.3.0",
     "electron": "^45.3.3",
+    "electron-builder": "^26.18.0",
     "lucide-react": "^1.74.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "vite": "^8.3.8"
+  },
+  "homepage": "https://pymite6941.github.io/tributary/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PyMite6941/tributary.git"
+  },
+  "bugs": {
+    "url": "https://github.com/PyMite6941/tributary/issues"
+  },
+  "build": {
+    "appId": "dev.pymite.tributary",
+    "productName": "Tributary",
+    "copyright": "Copyright Â© 2026 PyMite6941",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**",
+      "dist/**",
+      "build/icon.png",
+      "package.json",
+      {
+        "from": ".",
+        "to": ".",
+        "filter": [
+          "oauth.config.json"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "artifactName": "Tributary-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "artifactName": "Tributary-${version}-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network;Email",
+      "icon": "build/icon.png",
+      "maintainer": "PyMite6941 <PyMite6941@users.noreply.github.com>",
+      "artifactName": "Tributary-${version}-${arch}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "PyMite6941",
+        "repo": "tributary",
+        "releaseType": "release"
+      }
+    ]
   }
 }

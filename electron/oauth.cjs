@@ -28,16 +28,26 @@ const PROVIDERS = {
   },
 };
 
-function loadConfig() {
-  for (const p of [
-    path.join(app.getPath('userData'), 'oauth.config.json'),
-    path.join(app.getAppPath(), 'oauth.config.json'),
-  ]) {
-    try {
-      return JSON.parse(fs.readFileSync(p, 'utf8'));
-    } catch {}
+function readJson(p) {
+  try {
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch {
+    return {};
   }
-  return {};
+}
+
+// Built into the release by CI (scripts/write-oauth-config.mjs), or the dev's local file.
+const builtIn = () => readJson(path.join(app.getAppPath(), 'oauth.config.json'));
+// What the user entered in Settings → Sign-in providers.
+const userConfig = () => readJson(path.join(app.getPath('userData'), 'oauth.config.json'));
+
+// Per provider, the user's entry wins; otherwise the built-in one is used.
+function loadConfig() {
+  return { ...builtIn(), ...userConfig() };
+}
+
+function builtInProviders() {
+  return Object.keys(builtIn()).filter((k) => builtIn()[k]?.clientId);
 }
 
 function clientFor(provider) {
@@ -194,4 +204,4 @@ function configured() {
   return { google: !!c.google?.clientId, microsoft: !!c.microsoft?.clientId };
 }
 
-module.exports = { signIn, refresh, configured, loadConfig, saveConfig };
+module.exports = { signIn, refresh, configured, loadConfig, userConfig, builtInProviders, saveConfig };

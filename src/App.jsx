@@ -153,7 +153,7 @@ export default function App() {
   const needSignIn = accounts.filter((a) => a.status === 'reauth');
 
   return (
-    <div className="app">
+    <div className={`app platform-${window.tributary?.platform || 'web'}`}>
       <header className="titlebar">
         <div className="brand">
           <span className="logo" aria-hidden />

@@ -1,0 +1,35 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please **don't** paste passwords, tokens or email contents. Tributary never needs them to debug."
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Email provider(s) involved
+      multiple: true
+      options: [Gmail, Outlook / Hotmail, Yahoo, iCloud, AOL, Proton (Bridge), Other IMAP, Not provider-specific]
+  - type: input
+    id: error
+    attributes:
+      label: Error text shown in Settings (if any)
+  - type: input
+    id: version
+    attributes:
+      label: Tributary version and OS
+      placeholder: 0.1.0 on Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce

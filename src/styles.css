@@ -54,6 +54,8 @@ kbd { font: 11px ui-monospace, monospace; background: var(--raised); border: 1px
   border-bottom: 1px solid var(--line-soft);
   background: var(--bg);
 }
+.platform-darwin .titlebar { padding-left: 84px; } /* clear the macOS traffic lights */
+.platform-darwin .brand { width: 152px; }
 .brand { display: flex; align-items: center; gap: 9px; font-weight: 650; letter-spacing: 0.2px; width: 222px; }
 .logo { width: 20px; height: 20px; background: var(--logo) center / contain no-repeat; display: inline-block; }
 .logo.xl { width: 64px; height: 64px; }

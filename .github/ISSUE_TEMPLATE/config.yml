@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup guide (app passwords, Outlook, Proton Bridge)
+    url: https://pymite6941.github.io/tributary/setup.html
+    about: Most "can't connect" problems are answered here.
+  - name: Report a security vulnerability
+    url: https://github.com/PyMite6941/tributary/security/advisories/new
+    about: Please report privately, not as a public issue.
