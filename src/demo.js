@@ -96,6 +96,43 @@ const patch = (key, p) => {
   emit();
 };
 
+const usage = (todayReq, monthReq, errors = 0, extra = {}) => ({
+  today: { signIns: 0, refreshes: todayReq, errors: 0 },
+  month: { signIns: 2, refreshes: monthReq, errors },
+  last30: { signIns: 2, refreshes: monthReq, errors },
+  total: { signIns: 3, refreshes: monthReq + 40, errors },
+  lastUsedAt: Date.now() - 0.3 * H,
+  lastError: null,
+  lastErrorAt: null,
+  rateLimitedAt: null,
+  ...extra,
+});
+const inDays = (d) => new Date(Date.now() + d * 86_400_000).toISOString().slice(0, 10);
+const demoKeys = {
+  envPath: 'C:\\Users\\you\\AppData\\Roaming\\Tributary\\.env',
+  providers: {
+    google: {
+      chosenId: 'google-1', activeId: 'google-1', autoSwitch: true,
+      keys: [
+        { id: 'google-1', label: 'Main project', source: 'env', editable: true, clientIdHint: '4821930…googleusercontent.com', hasSecret: true,
+          plan: 'Google Cloud free tier', cost: '$0', dailyLimit: 1000, monthlyLimit: null, renews: '', owner: 'personal Google account',
+          notes: 'Testing mode: 100-user cap until verification.', inboxes: ['alex.rivera@gmail.com'], usage: usage(214, 3120), exhausted: null },
+        { id: 'google-2', label: 'Backup project', source: 'env', editable: true, clientIdHint: '9930117…googleusercontent.com', hasSecret: true,
+          plan: 'Workspace Business Starter', cost: '$7/user/mo', dailyLimit: 5000, monthlyLimit: 100000, renews: inDays(5), owner: 'school admin',
+          notes: '', inboxes: [], usage: usage(0, 18, 1, { lastError: 'Too Many Requests', lastErrorAt: Date.now() - 3 * H, rateLimitedAt: Date.now() - 3 * H }), exhausted: null },
+      ],
+    },
+    microsoft: {
+      chosenId: 'microsoft-1', activeId: 'microsoft-1', autoSwitch: false,
+      keys: [
+        { id: 'microsoft-1', label: 'Entra app', source: 'built-in', editable: false, clientIdHint: '7f3c2a10-5b1e…9d04', hasSecret: false,
+          plan: 'Entra ID free', cost: '$0', dailyLimit: null, monthlyLimit: null, renews: '', owner: '', notes: '',
+          inboxes: ['arivera@outlook.com'], usage: usage(23, 610), exhausted: null },
+      ],
+    },
+  },
+};
+
 export const demoApi = {
   getState: async () => state(),
   listProviders: async () => ({
@@ -116,8 +153,13 @@ export const demoApi = {
   removeAccount: async () => {},
   reconnectAccount: async () => {},
   reauthAccount: async () => { throw new Error('Demo mode: run the desktop app to connect real accounts.'); },
-  getOAuthConfig: async () => ({}),
-  saveOAuthConfig: async () => {},
+  listKeys: async () => demoKeys,
+  addKey: async () => { throw new Error('Demo mode: keys are saved to .env in the desktop app.'); },
+  updateKey: async () => demoKeys,
+  removeKey: async () => demoKeys,
+  setActiveKey: async (provider, id) => ((demoKeys.providers[provider].chosenId = demoKeys.providers[provider].activeId = id), structuredClone(demoKeys)),
+  setAutoSwitch: async (provider, on) => ((demoKeys.providers[provider].autoSwitch = on), structuredClone(demoKeys)),
+  openEnvFile: async () => demoKeys.envPath,
   onOpenSettings: () => () => {},
   saveRules: async (r) => { rules = r; emit(); },
   saveSettings: async (s) => { settings = { ...settings, ...s }; emit(); },

@@ -43,7 +43,7 @@ export default function App() {
   const [view, setView] = useState('all');
   const [selected, setSelected] = useState(() => params.get('view') === 'reader' ? 'a2:1' : null);
   const [query, setQuery] = useState('');
-  const [dialog, setDialog] = useState(() => ({ rules: 'rules', account: 'account', settings: 'settings' })[params.get('view')] || null); // 'account' | 'rules' | 'settings'
+  const [dialog, setDialog] = useState(() => ({ rules: 'rules', account: 'account', settings: 'settings', keys: 'settings' })[params.get('view')] || null); // 'account' | 'rules' | 'settings'
   const [ruleDraft, setRuleDraft] = useState(null); // prefilled rule when opening the rules dialog
   const [toast, setToast] = useState(null);
 

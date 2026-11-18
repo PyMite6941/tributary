@@ -128,8 +128,8 @@ export default function AccountDialog({ onClose }) {
                 <p className="warn">
                   <AlertCircle size={15} />
                   <span>
-                    Browser sign-in needs a {preset.oauth === 'google' ? 'Google' : 'Microsoft'} client ID first. Add it once under{' '}
-                    <strong>Settings → Sign-in providers</strong>.{' '}
+                    Browser sign-in needs a {preset.oauth === 'google' ? 'Google' : 'Microsoft'} sign-in key first. Add one under{' '}
+                    <strong>Settings → Sign-in keys</strong>.{' '}
                     <a href="#" onClick={(e) => (e.preventDefault(), api.openExternal('https://pymite6941.github.io/tributary/setup.html#oauth'))}>
                       How to get one
                     </a>

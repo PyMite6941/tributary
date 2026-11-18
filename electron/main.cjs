@@ -15,6 +15,9 @@ const SHOT = process.env.TRIBUTARY_SHOT;
 const ICON = path.join(__dirname, '..', 'build', 'icon.png');
 
 app.setAppUserModelId('dev.pymite.tributary'); // required for Windows toast notifications
+// Separate profile for tests / screenshots so they never touch your real accounts, keys or .env.
+if (process.env.TRIBUTARY_USER_DATA) app.setPath('userData', path.resolve(process.env.TRIBUTARY_USER_DATA));
+const VIEW = process.env.TRIBUTARY_DEMO_VIEW;
 
 let win = null;
 let tray = null;
@@ -33,12 +36,19 @@ function authGetter(account) {
     if (account.authType !== 'oauth') return { user: account.user, pass: secret };
     let t = tokenCache.get(account.id);
     if (!t || t.expiresAt - Date.now() < 5 * 60_000) {
-      t = await oauth.refresh(account.oauthProvider, secret);
+      t = await oauth.refresh(account.oauthProvider, secret, account.oauthKeyId);
       tokenCache.set(account.id, t);
+      let dirty = false;
       if (t.refreshToken !== secret) {
         account.secret = store.encrypt(t.refreshToken);
-        store.saveAccounts(accounts);
+        dirty = true;
       }
+      // Inboxes added before sign-in keys existed: bind them to the key that just worked.
+      if (!account.oauthKeyId && t.keyId) {
+        account.oauthKeyId = t.keyId;
+        dirty = true;
+      }
+      if (dirty) store.saveAccounts(accounts);
     }
     return { user: account.user, accessToken: t.accessToken };
   };
@@ -114,10 +124,55 @@ function notify(msg, r) {
 
 // ---------- state sent to the renderer ----------
 
-function publicAccount(a) {
+function publicAccount(a, keyList = oauth.keys().list()) {
   const s = sessions.get(a.id);
   const { secret, ...rest } = a; // the encrypted secret never crosses into the renderer
-  return { ...rest, status: s?.status || 'offline', error: s?.error || null };
+  const key = a.oauthKeyId ? keyList.find((k) => k.id === a.oauthKeyId) : null;
+  return {
+    ...rest,
+    oauthKeyLabel: a.oauthKeyId ? key?.label || 'removed key' : null,
+    status: s?.status || 'offline',
+    error: s?.error || null,
+  };
+}
+
+// What Settings → Sign-in keys shows. Client secrets never reach the renderer; IDs are shortened.
+function keysView() {
+  const ks = oauth.keys();
+  const all = ks.list();
+  const short = (id) => (id.length > 26 ? `${id.slice(0, 14)}…${id.slice(-8)}` : id);
+  const out = {};
+  for (const p of ['google', 'microsoft']) {
+    out[p] = {
+      chosenId: ks.chosen(p)?.id || null, // what you picked
+      activeId: ks.active(p)?.id || null, // what new sign-ins use (differs when auto-switch kicked in)
+      autoSwitch: ks.autoSwitch(p),
+      keys: all
+        .filter((k) => k.provider === p)
+        .map((k) => {
+          const usage = ks.usage(k.id);
+          return {
+            id: k.id,
+            label: k.label,
+            source: k.source,
+            editable: k.editable,
+            clientIdHint: short(k.clientId),
+            hasSecret: !!k.clientSecret,
+            plan: k.plan,
+            dailyLimit: k.dailyLimit,
+            monthlyLimit: k.monthlyLimit,
+            renews: k.renews,
+            cost: k.cost,
+            owner: k.owner,
+            notes: k.notes,
+            inboxes: accounts.filter((a) => a.oauthKeyId === k.id).map((a) => a.email),
+            usage,
+            exhausted: ks.exhausted(k, usage),
+          };
+        }),
+    };
+  }
+  return { providers: out, envPath: ks.envPath };
 }
 
 function buildState() {
@@ -126,7 +181,8 @@ function buildState() {
     for (const m of s.messages.values()) messages.push({ ...m, ...evaluate(m, rules) });
   }
   messages.sort((a, b) => (a.date < b.date ? 1 : -1));
-  return { accounts: accounts.map(publicAccount), rules, settings, messages };
+  const keyList = oauth.keys().list();
+  return { accounts: accounts.map((a) => publicAccount(a, keyList)), rules, settings, messages };
 }
 
 let broadcastTimer = null;
@@ -181,8 +237,8 @@ function createWindow() {
     }
   });
 
-  const query = DEMO ? { demo: '1', ...(process.env.TRIBUTARY_DEMO_VIEW ? { view: process.env.TRIBUTARY_DEMO_VIEW } : {}) } : {};
-  if (DEV_URL) win.loadURL(DEV_URL + (DEMO ? `?${new URLSearchParams(query)}` : ''));
+  const query = { ...(DEMO ? { demo: '1' } : {}), ...(VIEW ? { view: VIEW } : {}) };
+  if (DEV_URL) win.loadURL(DEV_URL + (Object.keys(query).length ? `?${new URLSearchParams(query)}` : ''));
   else win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'), { query });
 
   if (SHOT) {
@@ -273,6 +329,7 @@ function registerIpc() {
         user: result.email,
         authType: 'oauth',
         oauthProvider: preset.oauth,
+        oauthKeyId: result.keyId,
         secret: store.encrypt(result.refreshToken),
         _token: { accessToken: result.accessToken, expiresAt: result.expiresAt },
       };
@@ -337,6 +394,7 @@ function registerIpc() {
       }
       if (!result.refreshToken) throw new Error('The provider did not return a refresh token.');
       a.secret = store.encrypt(result.refreshToken);
+      a.oauthKeyId = result.keyId; // signing in again moves the inbox to the active key
       tokenCache.set(a.id, { accessToken: result.accessToken, expiresAt: result.expiresAt });
     } else {
       if (!draft.password) throw new Error('Enter the new app password.');
@@ -351,8 +409,45 @@ function registerIpc() {
     broadcast();
   });
 
-  handle('oauth:getConfig', () => ({ ...oauth.userConfig(), builtIn: oauth.builtInProviders() }));
-  handle('oauth:saveConfig', (cfg) => oauth.saveConfig(cfg));
+  // ---- sign-in keys (.env) ----
+  handle('keys:list', () => keysView());
+  handle('keys:add', (provider, draft) => {
+    oauth.keys().add(provider, draft || {});
+    broadcast();
+    return keysView();
+  });
+  handle('keys:remove', (id) => {
+    const users = accounts.filter((a) => a.oauthKeyId === id);
+    if (users.length) {
+      throw new Error(
+        `${users.map((a) => a.email).join(', ')} still ${users.length === 1 ? 'uses' : 'use'} this key. ` +
+          'Make another key active and use “Sign in again” on those inboxes first.'
+      );
+    }
+    oauth.keys().remove(id);
+    broadcast();
+    return keysView();
+  });
+  handle('keys:update', (id, patch) => {
+    oauth.keys().update(id, patch || {});
+    broadcast(); // inbox rows show the key label
+    return keysView();
+  });
+  handle('keys:setActive', (provider, id) => {
+    oauth.keys().setActive(provider, id);
+    return keysView();
+  });
+  handle('keys:setAutoSwitch', (provider, on) => {
+    oauth.keys().setAutoSwitch(provider, on);
+    return keysView();
+  });
+  handle('keys:openEnv', async () => {
+    const file = oauth.keys().ensureEnvFile();
+    // .env usually has no default app on Windows; fall back to showing it in Explorer/Finder.
+    const err = await shell.openPath(file);
+    if (err) shell.showItemInFolder(file);
+    return file;
+  });
 
   handle('account:reconnect', async (id) => {
     await stopSession(id);

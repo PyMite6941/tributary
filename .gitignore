@@ -4,3 +4,5 @@ release/
 oauth.config.json
 *.log
 .DS_Store
+.env
+.env.*

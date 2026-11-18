@@ -153,7 +153,7 @@ class AccountSession extends EventEmitter {
       // the account temporarily locked by the provider.
       const needsUser = e.reauth || (e.authenticationFailed && (a.authType !== 'oauth' || this.authFailures >= 2));
       if (needsUser) {
-        this.setStatus('reauth', a.authType === 'oauth' ? 'Sign-in expired or was revoked. Sign in again.' : friendlyError(e, a.host));
+        this.setStatus('reauth', e.userMessage || (a.authType === 'oauth' ? 'Sign-in expired or was revoked. Sign in again.' : friendlyError(e, a.host)));
         return;
       }
       this.setStatus('error', friendlyError(e, a.host));

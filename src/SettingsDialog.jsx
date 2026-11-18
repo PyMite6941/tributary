@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Trash2, AlertCircle, LogIn, KeyRound, Loader2, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Trash2, AlertCircle, LogIn, KeyRound, Loader2 } from 'lucide-react';
 import Modal from './Modal.jsx';
+import KeysSection from './KeysSection.jsx';
 import { api } from './api.js';
 
 const PROVIDER_NAMES = { gmail: 'Gmail', outlook: 'Outlook', yahoo: 'Yahoo', icloud: 'iCloud', aol: 'AOL', proton: 'Proton', custom: 'IMAP' };
@@ -36,7 +37,7 @@ function AccountRow({ a, onError }) {
         <div className="grow">
           <div>{a.email}</div>
           <div className="muted small">
-            {PROVIDER_NAMES[a.provider] || a.provider} · {oauth ? 'browser sign-in' : 'app password'} ·{' '}
+            {PROVIDER_NAMES[a.provider] || a.provider} · {oauth ? `browser sign-in${a.oauthKeyLabel ? ` (key: ${a.oauthKeyLabel})` : ''}` : 'app password'} ·{' '}
             <span className={`status-text ${a.status}`}>{STATUS_LABEL[a.status] || a.status}</span>
             {a.error && a.status !== 'online' && (
               <span className="err">
@@ -91,66 +92,6 @@ function AccountRow({ a, onError }) {
         </div>
       )}
     </div>
-  );
-}
-
-// Client IDs for browser sign-in. Stored in userData/oauth.config.json by the main process.
-function ProvidersSection({ onError }) {
-  const [cfg, setCfg] = useState(null);
-  const [builtIn, setBuiltIn] = useState([]);
-  const [saved, setSaved] = useState(false);
-  useEffect(() => {
-    api.getOAuthConfig().then((c) => {
-      setBuiltIn(c.builtIn || []);
-      setCfg({ google: { clientId: '', clientSecret: '', ...c.google }, microsoft: { clientId: '', ...c.microsoft } });
-    });
-  }, []);
-  // Release builds can ship with client IDs; then fields only override them and blank means "use the built-in one".
-  const hint = (prov, fallback) => (builtIn.includes(prov) ? 'Built in (leave blank to use it)' : fallback);
-  if (!cfg) return null;
-  const set = (prov, k) => (e) => {
-    setSaved(false);
-    setCfg({ ...cfg, [prov]: { ...cfg[prov], [k]: e.target.value } });
-  };
-  const save = async () => {
-    try {
-      await api.saveOAuthConfig(cfg);
-      setSaved(true);
-    } catch (e) {
-      onError(e);
-    }
-  };
-  return (
-    <>
-      <h4>Sign-in providers</h4>
-      <p className="muted small">
-        {builtIn.length === 2
-          ? 'This build already includes Google and Microsoft sign-in. You only need these fields to use your own app registrations. '
-          : 'Browser sign-in (“Sign in with Google / Microsoft”) needs one-time app registrations. '}
-        <a href="#" onClick={(e) => (e.preventDefault(), api.openExternal('https://pymite6941.github.io/tributary/setup.html#oauth'))}>
-          How to get these
-        </a>
-      </p>
-      <div className="oauth-grid">
-        <label>
-          Google client ID
-          <input value={cfg.google.clientId} onChange={set('google', 'clientId')} placeholder={hint('google', '….apps.googleusercontent.com')} />
-        </label>
-        <label>
-          Google client secret
-          <input type="password" value={cfg.google.clientSecret} onChange={set('google', 'clientSecret')} placeholder={hint('google', 'GOCSPX-…')} autoComplete="off" />
-        </label>
-        <label>
-          Microsoft client ID
-          <input value={cfg.microsoft.clientId} onChange={set('microsoft', 'clientId')} placeholder={hint('microsoft', '00000000-0000-…')} />
-        </label>
-        <div className="oauth-save">
-          <button className="btn small" onClick={save}>
-            {saved ? <CheckCircle2 size={13} /> : null} {saved ? 'Saved' : 'Save providers'}
-          </button>
-        </div>
-      </div>
-    </>
   );
 }
 
@@ -219,7 +160,7 @@ export default function SettingsDialog({ state, onClose, onError }) {
           <input type="number" min={50} max={5000} step={50} value={s.messagesPerAccount} onChange={(e) => setS({ ...s, messagesPerAccount: e.target.value })} />
         </label>
 
-        {!state.demo && <ProvidersSection onError={onError} />}
+        <KeysSection onError={onError} />
       </div>
     </Modal>
   );

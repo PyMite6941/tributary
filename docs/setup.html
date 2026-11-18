@@ -88,11 +88,27 @@
     <p>Rules are evaluated live. Editing a rule re-sorts your existing mail right away, not just new messages.</p>
 
     <h2 id="oauth">Browser sign-in setup</h2>
-    <p>Browser sign-in uses OAuth 2.0 with PKCE and a one-time loopback redirect on <code>127.0.0.1</code>. You register Tributary once with each provider, then paste the IDs into <strong>Settings → Sign-in providers</strong>. That's all; Gmail then defaults to one-click <em>Sign in with Google</em>. (Developers can also put them in <code>oauth.config.json</code> next to <code>package.json</code>.)</p>
-<pre><code>{
-  "microsoft": { "clientId": "00000000-0000-0000-0000-000000000000" },
-  "google":    { "clientId": "....apps.googleusercontent.com", "clientSecret": "GOCSPX-..." }
-}</code></pre>
+    <p>Browser sign-in uses OAuth 2.0 with PKCE and a one-time loopback redirect on <code>127.0.0.1</code>. You register Tributary once with each provider, and each registration becomes a <strong>sign-in key</strong>. Add it under <strong>Settings → Sign-in keys → Add key</strong>. Gmail then defaults to one-click <em>Sign in with Google</em>. The steps for creating keys are below.</p>
+
+    <h3 id="keys">Sign-in keys, subscriptions and switching</h3>
+    <p>Keys are saved in a <code>.env</code> file on your computer (<code>%APPDATA%\Tributary\.env</code> on Windows). <strong>Open .env</strong> in Settings opens it. You can keep several keys per provider and attach each one's subscription details: plan, cost, daily and monthly request limits, renewal date, billing account and notes.</p>
+<pre><code>GOOGLE_CLIENT_ID=1234-abc.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-...
+GOOGLE_CLIENT_LABEL="Main project"
+GOOGLE_CLIENT_PLAN="Google Cloud free tier"
+GOOGLE_CLIENT_DAILY_LIMIT=1000
+GOOGLE_CLIENT_RENEWS=2027-01-31
+
+GOOGLE_CLIENT_ID_2=5678-def.apps.googleusercontent.com
+GOOGLE_CLIENT_LABEL_2=Backup
+MICROSOFT_CLIENT_ID=00000000-0000-0000-0000-000000000000</code></pre>
+    <img class="shot" src="assets/screenshot-keys.png" alt="Settings → Sign-in keys: two Google keys with plans, renewal dates, and today's and this month's usage against their limits" loading="lazy" width="1362" height="817" />
+    <ul>
+      <li>Each key shows its usage for today, this month and the last 30 days against its limits, plus any recent errors or rate limits.</li>
+      <li>Pick which key <strong>new sign-ins</strong> use. With <strong>Auto-switch at limits</strong> on, Tributary moves new sign-ins to the next key with room once the picked key hits a limit or gets rate-limited.</li>
+      <li>Inboxes you've already connected keep using the key they signed in with, because a sign-in only works with the key that created it. To move an inbox to the selected key, click <em>Sign in again</em> on it.</li>
+      <li>Limits count the requests Tributary makes with a key: sign-ins and token refreshes, about one per inbox per hour. Google and Microsoft count reading and syncing mail against each mailbox, not against the key.</li>
+    </ul>
     <h3>Microsoft (Outlook)</h3>
     <ol>
       <li>Open <a href="https://entra.microsoft.com">Microsoft Entra admin center</a> → <strong>App registrations → New registration</strong>.</li>

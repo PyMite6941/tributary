@@ -35,7 +35,7 @@ A free desktop app that puts Gmail, Outlook, Yahoo, iCloud, AOL, Proton and any 
 
    Step-by-step instructions with links for every provider: **[setup guide](https://pymite6941.github.io/tributary/setup.html)**.
 
-   > *Sign in with Google / Microsoft* works in release builds that include sign-in IDs. If the button says sign-in isn't set up, use an app password for Gmail, or add IDs under **Settings → Sign-in providers** ([how](https://pymite6941.github.io/tributary/setup.html#oauth)). Outlook needs this step.
+   > *Sign in with Google / Microsoft* works in release builds that include sign-in IDs. If the button says sign-in isn't set up, use an app password for Gmail, or add a key under **Settings → Sign-in keys** ([how](https://pymite6941.github.io/tributary/setup.html#oauth)). Outlook needs this step.
 4. **Make it yours.** Click **Notify me** on an email to get a desktop alert whenever that sender writes. Open **Rules & filters** to sort mail into views like *College* or *Receipts*.
 
 You stay signed in after that. Tributary refreshes sign-ins in the background. If a provider ever revokes access, the inbox shows *needs sign-in* with a **Sign in again** button instead of failing silently.
@@ -73,16 +73,40 @@ npm version patch     # bumps package.json and creates the tag
 git push --follow-tags
 ```
 
-### Browser sign-in (OAuth) client IDs
+### Sign-in keys (OAuth client IDs) in `.env`
 
-Google and Microsoft sign-in need a one-time app registration ([how-to](https://pymite6941.github.io/tributary/setup.html#oauth)). There are three ways to supply the IDs:
+Google and Microsoft sign-in need a one-time app registration ([how-to](https://pymite6941.github.io/tributary/setup.html#oauth)). Each registration is a **sign-in key**. You can have several per provider and switch between them by usage.
 
-- **Release builds:** add repo secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `MICROSOFT_CLIENT_ID`. The release workflow bakes them in (`scripts/write-oauth-config.mjs`), so users get one-click sign-in.
-- **Per user:** Settings → Sign-in providers. These override the built-in IDs for that provider.
-- **Local dev:** `oauth.config.json` in the project root (gitignored):
-  ```json
-  { "microsoft": { "clientId": "…" }, "google": { "clientId": "…apps.googleusercontent.com", "clientSecret": "GOCSPX-…" } }
-  ```
+Keys live in a local `.env` file in the app's data folder (`%APPDATA%\Tributary\.env` on Windows). **Settings → Sign-in keys** edits it; **Open .env** opens it for hand edits. Any suffix adds another key, and subscription details attach with the same suffix:
+
+```ini
+GOOGLE_CLIENT_ID=1234-abc.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-…
+GOOGLE_CLIENT_LABEL="Main project"
+GOOGLE_CLIENT_PLAN="Google Cloud free tier"
+GOOGLE_CLIENT_DAILY_LIMIT=1000          # requests/day before auto-switch skips it
+GOOGLE_CLIENT_MONTHLY_LIMIT=25000
+GOOGLE_CLIENT_RENEWS=2027-01-31         # shows a countdown, warns 7 days out
+GOOGLE_CLIENT_COST="$0"
+GOOGLE_CLIENT_OWNER="personal Google account"
+GOOGLE_CLIENT_NOTES="Testing mode: 100-user cap"
+
+GOOGLE_CLIENT_ID_2=5678-def.apps.googleusercontent.com
+GOOGLE_CLIENT_LABEL_2=Backup
+MICROSOFT_CLIENT_ID=00000000-0000-0000-0000-000000000000
+```
+
+- **Usage** per key (sign-ins, token refreshes, errors, rate limits) is counted for today, this month and the last 30 days, and shown against the key's limits.
+- **Switching:** pick the key new sign-ins use. Turn on **Auto-switch at limits** to move new sign-ins to the next key with room when the picked one hits its daily or monthly limit or was rate-limited in the last hour.
+- **Each inbox stays on the key it signed in with.** A refresh token only works with the client ID that issued it, so switching never breaks connected inboxes. Use *Sign in again* on an inbox to move it to the selected key. A key that's still in use can't be removed from Settings. If one disappears from `.env` or the provider rejects it, its inboxes ask you to sign in again instead of retrying.
+- Limits count the requests Tributary makes with the key (about one refresh per inbox per hour). Providers count reading and syncing mail against each mailbox, not the key.
+
+Other sources, listed after your `.env` keys:
+
+- **Release builds:** repo secrets `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `MICROSOFT_CLIENT_ID` are baked in by the release workflow (`scripts/write-oauth-config.mjs`) and appear as the *built-in* key. You can attach subscription details to it, but you can't remove it.
+- **Running from a checkout:** a `.env` in the project root (gitignored) is read too, read-only.
+
+IDs saved by older versions (`oauth.config.json` in the data folder) move into `.env` automatically on first run.
 
 These are public-client IDs. Desktop apps can't keep secrets, and Google documents its desktop-app "secret" as non-confidential. Security comes from PKCE and the loopback redirect.
 
@@ -116,9 +140,11 @@ scripts/         dev launcher, icon generator, CI OAuth config writer
 Screenshots in `docs/assets/` are generated from the real app with demo data:
 
 ```powershell
-$env:TRIBUTARY_DEMO=1; $env:TRIBUTARY_DEMO_VIEW='reader'   # reader | rules | account | settings
+$env:TRIBUTARY_DEMO=1; $env:TRIBUTARY_DEMO_VIEW='reader'   # reader | rules | account | settings | keys
 $env:TRIBUTARY_SHOT="$PWD\docs\assets\screenshot-reader.png"; npm start
 ```
+
+`TRIBUTARY_USER_DATA=<folder>` runs the app on a separate profile, with its own accounts, keys and `.env`, so tests never touch your real data.
 
 ## License
 
