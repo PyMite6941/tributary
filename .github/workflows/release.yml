@@ -14,6 +14,11 @@ on:
       tag:
         description: Existing tag to (re)build, e.g. v0.1.0
         required: true
+      os:
+        description: Which platform(s) to rebuild
+        type: choice
+        default: all
+        options: [all, windows, macos, ubuntu]
 
 permissions:
   contents: write
@@ -38,7 +43,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        # Tag pushes build everything; a manual run can rebuild a single platform.
+        os: ${{ fromJSON((github.event.inputs.os && github.event.inputs.os != 'all') && format('["{0}-latest"]', github.event.inputs.os) || '["windows-latest","macos-latest","ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -60,7 +66,8 @@ jobs:
         run: node scripts/write-oauth-config.mjs
 
       - name: Build installers
-        run: npm run build && npx electron-builder --publish never
+        # macOS: Apple Silicon + Intel dmgs, set on the CLI so rebuilding an older tag gets both too.
+        run: npm run build && npx electron-builder --publish never ${{ runner.os == 'macOS' && '--mac --arm64 --x64' || '' }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false' # unsigned builds; see README
 
