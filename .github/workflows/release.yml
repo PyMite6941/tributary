@@ -59,8 +59,19 @@ jobs:
           MICROSOFT_CLIENT_ID: ${{ secrets.MICROSOFT_CLIENT_ID }}
         run: node scripts/write-oauth-config.mjs
 
-      - name: Build and upload installers
-        run: npm run build && npx electron-builder --publish always
+      - name: Build installers
+        run: npm run build && npx electron-builder --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false' # unsigned builds; see README
+
+      # Uploaded with gh rather than electron-builder: electron-builder refuses to add files to a
+      # release published over 2 hours ago, which breaks re-running a single slow job (e.g. macOS).
+      - name: Upload installers to the release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false' # unsigned builds; see README
+        run: |
+          shopt -s nullglob
+          files=(release/*.exe release/*.dmg release/*.AppImage release/*.deb release/*.blockmap release/latest*.yml)
+          ls -la "${files[@]}"
+          gh release upload "$TAG" "${files[@]}" --clobber
