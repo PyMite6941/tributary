@@ -81,6 +81,12 @@ let messages = raw.map(([accountId, name, address, subject, h, seen, flagged], i
 let settings = { notifyAllNew: false, blockRemoteImages: true, messagesPerAccount: 300, minimizeToTray: true };
 const listeners = new Set();
 
+// What "Erase all data" leaves to do by hand, for the demo / ?view=erased screenshot.
+export const demoErasedHints = [
+  { email: 'alex.rivera@gmail.com', text: 'The app password still works until you delete it. Delete the one you made for Tributary.', url: 'https://myaccount.google.com/apppasswords' },
+  { email: 'arivera@outlook.com', text: 'Microsoft keeps the sign-in until you remove it. Remove Tributary from the apps that can access your account.', url: 'https://account.live.com/consent/Manage' },
+];
+
 function state() {
   return {
     accounts,
@@ -154,7 +160,7 @@ export const demoApi = {
   testAccount: async () => ({ ok: false, error: 'Demo mode — run the desktop app to connect real accounts.' }),
   addAccount: async () => { throw new Error('Demo mode — run the desktop app to connect real accounts.'); },
   updateAccount: async () => {},
-  removeAccount: async () => {},
+  removeAccount: async () => ({ email: 'arivera@outlook.com', text: 'Microsoft keeps the sign-in until you remove it. Remove Tributary from the apps that can access your account.', url: 'https://account.live.com/consent/Manage' }),
   reconnectAccount: async () => {},
   reauthAccount: async () => { throw new Error('Demo mode: run the desktop app to connect real accounts.'); },
   listKeys: async () => demoKeys,
@@ -164,7 +170,11 @@ export const demoApi = {
   setActiveKey: async (provider, id) => ((demoKeys.providers[provider].chosenId = demoKeys.providers[provider].activeId = id), structuredClone(demoKeys)),
   setAutoSwitch: async (provider, on) => ((demoKeys.providers[provider].autoSwitch = on), structuredClone(demoKeys)),
   openEnvFile: async () => demoKeys.envPath,
-  getAppInfo: async () => ({ version: '0.2.0', platform: 'win32', canStartAtLogin: true }),
+  getAppInfo: async () => ({ version: '0.2.0', platform: 'win32', canStartAtLogin: true, dataDir: 'C:\\Users\\you\\AppData\\Roaming\\Tributary', canUninstall: true, packaging: 'nsis' }),
+  uninstall: async () => {},
+  eraseAll: async () => demoErasedHints,
+  quit: async () => {},
+  openDataFolder: async () => {},
   checkForUpdates: async () => ({ current: '0.2.0', latest: '0.2.0', newer: false, url: null }),
   onOpenSettings: () => () => {},
   saveRules: async (r) => { rules = r; emit(); },

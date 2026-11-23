@@ -32,6 +32,10 @@ contextBridge.exposeInMainWorld('tributary', {
   move: (key, kind) => call('mail:move', key, kind),
   openExternal: (url) => call('open:external', url),
   getAppInfo: () => call('app:info'),
+  uninstall: () => call('app:uninstall'),
+  eraseAll: () => call('app:eraseAll'),
+  quit: () => call('app:quit'),
+  openDataFolder: () => call('app:openData'),
   checkForUpdates: () => call('app:checkUpdate'),
   onState: (fn) => {
     const h = (_e, s) => fn(s);

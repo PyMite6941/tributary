@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { RefreshCw, Trash2, AlertCircle, LogIn, KeyRound, Loader2, CheckCircle2, ArrowUpCircle } from 'lucide-react';
 import Modal from './Modal.jsx';
 import KeysSection from './KeysSection.jsx';
+import RemoveSection, { AccessHints } from './RemoveSection.jsx';
 import { api } from './api.js';
 
 const PROVIDER_NAMES = { gmail: 'Gmail', outlook: 'Outlook', yahoo: 'Yahoo', icloud: 'iCloud', aol: 'AOL', proton: 'Proton', custom: 'IMAP' };
@@ -9,7 +10,7 @@ const STATUS_LABEL = { online: 'connected', connecting: 'connecting…', error: 
 
 // One inbox row. When the provider rejects our credentials the session stops retrying (status "reauth")
 // and this row offers the fix: browser sign-in again, or a new app password.
-function AccountRow({ a, onError }) {
+function AccountRow({ a, onError, onRemoved }) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pw, setPw] = useState('');
@@ -51,7 +52,7 @@ function AccountRow({ a, onError }) {
           <RefreshCw size={14} />
         </button>
         {confirm ? (
-          <button className="btn danger small" onClick={() => api.removeAccount(a.id).catch(onError)}>
+          <button className="btn danger small" onClick={() => api.removeAccount(a.id).then((h) => h && onRemoved(h), onError)}>
             Remove?
           </button>
         ) : (
@@ -157,9 +158,10 @@ function About({ info, onError }) {
   );
 }
 
-export default function SettingsDialog({ state, onClose, onError }) {
+export default function SettingsDialog({ state, onClose, onError, onErased }) {
   const [s, setS] = useState(state.settings);
   const [info, setInfo] = useState(null);
+  const [removed, setRemoved] = useState([]); // access still to revoke for inboxes removed in this session
   useEffect(() => {
     api.getAppInfo().then(setInfo).catch(() => {});
   }, []);
@@ -196,9 +198,10 @@ export default function SettingsDialog({ state, onClose, onError }) {
         <div className="acct-table">
           {state.accounts.length === 0 && <p className="muted">No inboxes yet.</p>}
           {state.accounts.map((a) => (
-            <AccountRow key={a.id} a={a} onError={onError} />
+            <AccountRow key={a.id} a={a} onError={onError} onRemoved={(h) => setRemoved((r) => [...r, h])} />
           ))}
         </div>
+        <AccessHints hints={removed} />
         <p className="muted small">
           App passwords and sign-in tokens are encrypted with Windows' own keystore (DPAPI) and stay signed in across restarts.
           Access tokens refresh automatically. If a provider revokes access, the inbox shows “needs sign-in” here instead of
@@ -238,6 +241,8 @@ export default function SettingsDialog({ state, onClose, onError }) {
         </label>
 
         <KeysSection onError={onError} />
+
+        <RemoveSection info={info} onError={onError} onErased={onErased} />
 
         <About info={info} onError={onError} />
       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Search, X, AlertCircle, ArrowUpCircle } from 'lucide-react';
 import { api, params } from './api.js';
+import { demoErasedHints } from './demo.js';
 import Sidebar from './Sidebar.jsx';
 import MessageList from './MessageList.jsx';
 import Reader from './Reader.jsx';
@@ -8,6 +9,7 @@ import AccountDialog from './AccountDialog.jsx';
 import RulesDialog from './RulesDialog.jsx';
 import SettingsDialog from './SettingsDialog.jsx';
 import Welcome from './Welcome.jsx';
+import { ErasedScreen } from './RemoveSection.jsx';
 
 function filterFor(view, accounts) {
   if (view === 'all') return (m) => !m.hide;
@@ -46,6 +48,8 @@ export default function App() {
   const [dialog, setDialog] = useState(() => ({ rules: 'rules', account: 'account', settings: 'settings', keys: 'settings' })[params.get('view')] || null); // 'account' | 'rules' | 'settings'
   const [ruleDraft, setRuleDraft] = useState(null); // prefilled rule when opening the rules dialog
   const [toast, setToast] = useState(null);
+  const [erased, setErased] = useState(() => (params.has('demo') && params.get('view') === 'erased' ? demoErasedHints : null)); // access hints left after "Erase all data"
+  const [canUninstall, setCanUninstall] = useState(false);
 
   useEffect(() => {
     api.getState().then(setState);
@@ -150,6 +154,7 @@ export default function App() {
   };
 
   if (!state) return <div className="boot" />;
+  if (erased) return <ErasedScreen hints={erased} uninstall={canUninstall} />;
   const needSignIn = accounts.filter((a) => a.status === 'reauth');
 
   return (
@@ -234,7 +239,16 @@ export default function App() {
         />
       )}
       {dialog === 'settings' && (
-        <SettingsDialog state={state} onClose={() => setDialog(null)} onError={showError} />
+        <SettingsDialog
+          state={state}
+          onClose={() => setDialog(null)}
+          onError={showError}
+          onErased={(hints) => {
+            api.getAppInfo().then((i) => setCanUninstall(!!i.canUninstall), () => {});
+            setDialog(null);
+            setErased(hints || []);
+          }}
+        />
       )}
 
       {needSignIn.length > 0 && !dialog && (

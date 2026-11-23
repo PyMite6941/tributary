@@ -352,6 +352,22 @@ code { font: 12px ui-monospace, monospace; background: var(--raised); padding: 1
 .err { color: var(--danger); }
 .update-banner { position: fixed; right: 20px; bottom: 20px; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 10px; background: #16213a; border: 1px solid rgba(91, 140, 255, 0.45); color: #d7e3ff; font-size: 13px; z-index: 40; box-shadow: 0 12px 40px rgba(0,0,0,.45); }
 .update-banner > svg { color: var(--accent); flex: none; }
+.remove-box { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line); }
+.remove-box p { margin: 0; }
+.data-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.data-line code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
+.erase-confirm { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(239, 107, 123, 0.4); background: rgba(239, 107, 123, 0.06); }
+.erase-confirm ul { margin: 0; padding-left: 18px; color: var(--text-2); display: grid; gap: 2px; }
+.btn.danger-solid { background: var(--danger); color: #fff; border-color: transparent; }
+.btn.danger-solid:hover { filter: brightness(1.08); }
+.access-hints { display: flex; flex-direction: column; gap: 6px; }
+.access-hints a { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.erased { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); z-index: 100; padding: 16px; }
+.erased-card { width: min(560px, 100%); display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 24px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); }
+.erased-card h2 { margin: 0; font-size: 18px; }
+.erased-card p { margin: 0; }
+.erased-card .ok { color: var(--ok); }
+.erased-card .access-hints { align-self: stretch; }
 .about { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--line); }
 .about-line { display: flex; align-items: center; gap: 10px; }
 .about-logo { width: 28px; height: 28px; border-radius: 7px; background: var(--logo) center/cover; flex: none; }

@@ -23,7 +23,7 @@
     <h1>Setup guide</h1>
     <p>Every provider below speaks IMAP, and Tributary uses it for all of them. The difference is how you log in. Most providers no longer accept your normal password from third-party apps, so you'll create an <strong>app password</strong> (a separate password just for Tributary) or sign in through your browser.</p>
     <div class="toc">
-      <a href="#install">Installing</a><a href="#gmail">Gmail</a><a href="#outlook">Outlook / Hotmail</a><a href="#yahoo">Yahoo</a><a href="#icloud">iCloud</a><a href="#aol">AOL</a><a href="#proton">Proton</a><a href="#other">Other IMAP</a><a href="#rules">Rules</a><a href="#trouble">Troubleshooting</a>
+      <a href="#install">Installing</a><a href="#gmail">Gmail</a><a href="#outlook">Outlook / Hotmail</a><a href="#yahoo">Yahoo</a><a href="#icloud">iCloud</a><a href="#aol">AOL</a><a href="#proton">Proton</a><a href="#other">Other IMAP</a><a href="#rules">Rules</a><a href="#trouble">Troubleshooting</a><a href="#uninstall">Uninstalling</a>
     </div>
 
     <h2 id="gmail">Gmail</h2>
@@ -139,6 +139,26 @@ MICROSOFT_CLIENT_ID=00000000-0000-0000-0000-000000000000</code></pre>
       <li><strong>Amber dot / “needs sign-in”</strong>: the credentials were rejected. Use <em>Sign in again</em> or enter a new app password in Settings.</li>
       <li><strong>Proton “connection refused”</strong>: Bridge isn't running.</li>
       <li><strong>No notifications on Windows</strong>: check <em>Settings → System → Notifications</em> and make sure Tributary is allowed and Focus is off.</li>
+    </ul>
+
+    <h2 id="uninstall">Uninstalling</h2>
+    <p>Tributary keeps everything in one folder on your computer and has no account to close. Your email stays with your providers; removing Tributary never deletes any mail.</p>
+    <ul>
+      <li><strong>Windows:</strong> <em>Settings → Apps → Installed apps → Tributary → Uninstall</em>, or <em>Uninstall Tributary…</em> in Tributary's own Settings. The uninstaller asks whether to delete your data too, and always removes the start-at-login entry.</li>
+      <li><strong>macOS:</strong> erase your data first (below), then quit Tributary and drag it from Applications to the Trash.</li>
+      <li><strong>Linux:</strong> erase your data first, then run <code>sudo apt remove tributary</code>, or delete the <code>.AppImage</code>.</li>
+    </ul>
+    <p><strong>Erase all data</strong> (Settings → Remove Tributary) signs out of every inbox, revokes Google sign-ins, turns off start at login, and deletes your saved passwords and sign-in tokens, rules, cached mail, settings and sign-in keys. Then Tributary closes. To delete the folder by hand instead, it's here:</p>
+    <ul>
+      <li>Windows: <code>%APPDATA%\Tributary</code></li>
+      <li>macOS: <code>~/Library/Application Support/Tributary</code></li>
+      <li>Linux: <code>~/.config/Tributary</code></li>
+    </ul>
+    <p><strong>Revoke access at your providers.</strong> Deleting files on your computer doesn't stop a provider accepting what it gave Tributary. Tributary revokes Google sign-ins itself and tells you where to go for the rest:</p>
+    <ul>
+      <li>Microsoft sign-in: <a href="https://account.live.com/consent/Manage">account.live.com/consent/Manage</a> → Tributary → Remove.</li>
+      <li>Gmail app password: <a href="https://myaccount.google.com/apppasswords">myaccount.google.com/apppasswords</a>.</li>
+      <li>Yahoo, AOL, iCloud: delete the app password you made, in the account's security settings.</li>
     </ul>
   </main>
 

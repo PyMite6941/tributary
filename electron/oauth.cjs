@@ -210,4 +210,22 @@ function configured() {
   return { google: !!keys().active('google'), microsoft: !!keys().active('microsoft') };
 }
 
-module.exports = { signIn, refresh, configured, keys };
+// Google lets an app revoke its own refresh token (which also ends the grant). Microsoft has no equivalent
+// for public clients, so its sign-ins are removed from the user's account page instead (see erase.cjs).
+async function revoke(provider, refreshToken) {
+  if (provider !== 'google' || !refreshToken) return false;
+  try {
+    const res = await fetch('https://oauth2.googleapis.com/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ token: refreshToken }),
+      signal: AbortSignal.timeout(8000),
+    });
+    // 400 invalid_token: already revoked or expired, which is the outcome we wanted.
+    return res.ok || res.status === 400;
+  } catch {
+    return false; // offline: the caller tells the user to remove access by hand
+  }
+}
+
+module.exports = { signIn, refresh, configured, keys, revoke };

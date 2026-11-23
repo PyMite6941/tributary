@@ -1,12 +1,15 @@
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, shell, nativeImage } = require('electron');
+const fs = require('node:fs');
+const { spawn } = require('node:child_process');
+const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, shell, nativeImage, session } = require('electron');
 const store = require('./store.cjs');
 const providers = require('./providers.cjs');
 const oauth = require('./oauth.cjs');
 const { evaluate } = require('./rules.cjs');
 const { AccountSession, testConnection } = require('./mail.cjs');
 const updates = require('./updates.cjs');
+const { eraseOwnedFiles, accessHint } = require('./erase.cjs');
 
 const DEV_URL = process.env.VITE_DEV_URL;
 // TRIBUTARY_DEMO=1 shows sample data instead of real accounts (for screenshots / demos).
@@ -31,6 +34,7 @@ let settings = {};
 const sessions = new Map(); // accountId -> AccountSession
 const tokenCache = new Map(); // accountId -> { accessToken, expiresAt }
 let updateInfo = null; // last result of the GitHub release check
+let erased = false; // after "Erase all data": nothing may be written back before quitting
 
 // ---------- auth ----------
 
@@ -65,7 +69,10 @@ function persist(session) {
   clearTimeout(persistTimers.get(session.account.id));
   persistTimers.set(
     session.account.id,
-    setTimeout(() => store.saveCache(session.account.id, session.snapshot()), 1000)
+    // Skipped if the inbox was removed (or everything erased) during the delay, so it can't write the cache back.
+    setTimeout(() => {
+      if (!erased && sessions.get(session.account.id) === session) store.saveCache(session.account.id, session.snapshot());
+    }, 1000)
   );
 }
 
@@ -297,9 +304,12 @@ function sessionFor(key) {
   return [s, Number(key.slice(i + 1))];
 }
 
+const AFTER_ERASE = new Set(['app:quit', 'app:uninstall', 'open:external', 'app:info', 'state:get']);
 function handle(channel, fn) {
   // Errors are returned as values so the renderer gets a readable message instead of Electron's wrapper.
   ipcMain.handle(channel, async (_e, ...args) => {
+    // After "Erase all data" only quitting and opening revoke pages are allowed, so nothing is written back.
+    if (erased && !AFTER_ERASE.has(channel)) return { ok: false, error: 'Tributary has erased its data. Quit to finish.' };
     try {
       return { ok: true, value: await fn(...args) };
     } catch (e) {
@@ -378,13 +388,19 @@ function registerIpc() {
     broadcast();
   });
 
+  // Returns where (if anywhere) the user still has to revoke access by hand.
   handle('account:remove', async (id) => {
+    const a = accounts.find((x) => x.id === id);
+    if (!a) return null;
     await stopSession(id);
-    accounts = accounts.filter((a) => a.id !== id);
+    const revoked = await revokeAccess(a);
+    accounts = accounts.filter((x) => x.id !== id);
     tokenCache.delete(id);
     store.saveAccounts(accounts);
     store.dropCache(id);
     broadcast();
+    const hint = accessHint(a, revoked);
+    return hint && { email: a.email, ...hint };
   });
 
   // Fix an account whose sign-in expired or whose app password changed, keeping its cache, color and rules.
@@ -475,7 +491,53 @@ function registerIpc() {
     broadcast();
   });
 
-  handle('app:info', () => ({ version: app.getVersion(), platform: process.platform, canStartAtLogin: CAN_START_AT_LOGIN }));
+  handle('app:info', () => ({
+    version: app.getVersion(),
+    platform: process.platform,
+    canStartAtLogin: CAN_START_AT_LOGIN,
+    dataDir: app.getPath('userData'),
+    canUninstall: !!uninstallerPath(),
+    packaging: packaging(),
+  }));
+
+  // Windows: hand over to the real uninstaller (it asks whether to delete your data too), then get out of its way.
+  handle('app:uninstall', async () => {
+    const exe = uninstallerPath();
+    if (!exe) throw new Error('No uninstaller found. Remove Tributary from Settings → Apps instead.');
+    spawn(exe, [], { detached: true, stdio: 'ignore' }).unref();
+    quitting = true;
+    setTimeout(() => app.quit(), 300);
+  });
+
+  // Signs out everywhere it can, deletes everything Tributary stored, then quits. Returns what still needs
+  // doing by hand (Microsoft sign-ins and app passwords can't be revoked by the app).
+  handle('app:eraseAll', async () => {
+    const hints = [];
+    for (const a of accounts) {
+      await stopSession(a.id);
+      const h = accessHint(a, await revokeAccess(a));
+      if (h) hints.push({ email: a.email, ...h });
+    }
+    accounts = [];
+    tokenCache.clear();
+    if (CAN_START_AT_LOGIN) app.setLoginItemSettings({ ...LOGIN_ITEM, openAtLogin: false });
+    await session.defaultSession.clearStorageData().catch(() => {});
+    await session.defaultSession.clearCache().catch(() => {});
+    eraseOwnedFiles(app.getPath('userData'));
+    settings = store.loadSettings(); // defaults; nothing is written back
+    rules = [];
+    erased = true;
+    broadcast();
+    return hints;
+  });
+  handle('app:openData', async () => {
+    const err = await shell.openPath(app.getPath('userData'));
+    if (err) throw new Error(err);
+  });
+  handle('app:quit', async () => {
+    quitting = true;
+    app.quit();
+  });
   handle('app:checkUpdate', async () => {
     updateInfo = await updates.check(app.getVersion());
     broadcast();
@@ -506,6 +568,31 @@ function registerIpc() {
 // Windows keys the Run entry by `name` + `args`, so set and query with the same values. The name is fixed
 // so build/installer.nsh can delete the entry on uninstall.
 const LOGIN_ITEM = { name: 'Tributary', args: ['--hidden'] };
+
+// Best effort; never blocks removing an inbox.
+async function revokeAccess(a) {
+  if (a.authType !== 'oauth') return false;
+  try {
+    return await oauth.revoke(a.oauthProvider, store.decrypt(a.secret));
+  } catch {
+    return false;
+  }
+}
+
+// NSIS installs "Uninstall Tributary.exe" next to the app. Absent in dev, portable and non-Windows builds.
+function uninstallerPath() {
+  if (process.platform !== 'win32' || !app.isPackaged) return null;
+  const exe = path.join(path.dirname(process.execPath), 'Uninstall Tributary.exe');
+  return fs.existsSync(exe) ? exe : null;
+}
+
+// How this copy was installed, so Settings can say how to remove it.
+function packaging() {
+  if (!app.isPackaged) return 'dev';
+  if (process.platform === 'win32') return uninstallerPath() ? 'nsis' : 'portable';
+  if (process.platform === 'darwin') return 'mac';
+  return process.env.APPIMAGE ? 'appimage' : 'deb';
+}
 
 function applyLoginItem() {
   if (!CAN_START_AT_LOGIN) return;
@@ -575,6 +662,7 @@ if (!SHOT && !app.requestSingleInstanceLock()) {
   });
   app.on('before-quit', () => {
     quitting = true;
+    if (erased) return;
     for (const s of sessions.values()) store.saveCache(s.account.id, s.snapshot());
   });
   app.on('window-all-closed', () => {

@@ -118,6 +118,13 @@ These are public-client IDs. Desktop apps can't keep secrets, and Google documen
 - Access tokens live in memory only and refresh 5 minutes before they expire. Microsoft's rotated refresh tokens are re-encrypted and saved.
 - When the server rejects an access token, it is dropped and refreshed once. If the refresh returns `invalid_grant`, an app password is rejected, or a fresh token is rejected again, the session **stops** in a `reauth` state. It doesn't loop on bad credentials, which can lock accounts. The UI then shows a banner, one notification, and *Sign in again* / *new app password* in Settings. Covered by `test/session-auth.test.cjs` against a fake IMAP server.
 
+### Uninstalling
+
+- **Windows:** Settings → Apps → Tributary → Uninstall, or *Uninstall Tributary…* in the app. The uninstaller asks whether to delete your data (silent `/S` uninstalls keep it) and always removes the start-at-login entry (`build/installer.nsh`).
+- **macOS / Linux:** Settings → Remove Tributary → *Erase all data*, then drag the app to the Trash, `sudo apt remove tributary`, or delete the AppImage.
+- *Erase all data* signs out, revokes Google refresh tokens, turns off start at login, deletes only the files Tributary owns (`electron/erase.cjs`) and quits. For Microsoft sign-ins and app passwords, which the app can't revoke, it links to the right account page. Removing a single inbox does the same for that inbox.
+- Data folders: `%APPDATA%\Tributary`, `~/Library/Application Support/Tributary`, `~/.config/Tributary`.
+
 ### Proton Mail Bridge
 
 Bridge serves IMAP on `127.0.0.1:1143` with STARTTLS and a self-signed certificate. Tributary skips certificate verification **only** for loopback hosts (`127.0.0.1`, `localhost`, `::1`). Every remote server must present a valid certificate. If Bridge isn't running, the inbox reports *"Is Proton Mail Bridge running?"* and keeps retrying, so it reconnects on its own once Bridge starts.

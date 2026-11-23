@@ -9,6 +9,7 @@
 - **Start at sign-in** (Windows/macOS installs), opening in the tray.
 - **Update notices:** a daily check of GitHub's public releases, with a dismissible banner. Can be switched off.
 - **About** section in Settings with the version, *Check for updates* and links.
+- **Easy to remove.** The Windows uninstaller asks whether to delete your data and always removes the start-at-login entry. *Settings → Remove Tributary* has *Uninstall* and *Erase all data*, which signs out everywhere, revokes Google sign-ins and deletes everything Tributary stored. Removing an inbox revokes its Google sign-in, or links to the page where you remove access yourself.
 - IDs saved by 0.1.0 under *Sign-in providers* move into `.env` automatically.
 - Releases: macOS now ships both Apple silicon and Intel `.dmg`s; one platform can be rebuilt on its own.
 
