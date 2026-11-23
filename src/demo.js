@@ -88,6 +88,10 @@ function state() {
     settings,
     messages: messages.map((m) => ({ ...m, ...evalDemo(m) })).sort((a, b) => (a.date < b.date ? 1 : -1)),
     demo: true,
+    // ?view=update previews the "new version" banner.
+    update: new URLSearchParams(globalThis.location?.search || '').get('view') === 'update'
+      ? { current: '0.2.0', latest: '0.2.1', newer: true, url: 'https://github.com/PyMite6941/tributary/releases/latest' }
+      : null,
   };
 }
 const emit = () => listeners.forEach((fn) => fn(state()));
@@ -160,6 +164,8 @@ export const demoApi = {
   setActiveKey: async (provider, id) => ((demoKeys.providers[provider].chosenId = demoKeys.providers[provider].activeId = id), structuredClone(demoKeys)),
   setAutoSwitch: async (provider, on) => ((demoKeys.providers[provider].autoSwitch = on), structuredClone(demoKeys)),
   openEnvFile: async () => demoKeys.envPath,
+  getAppInfo: async () => ({ version: '0.2.0', platform: 'win32', canStartAtLogin: true }),
+  checkForUpdates: async () => ({ current: '0.2.0', latest: '0.2.0', newer: false, url: null }),
   onOpenSettings: () => () => {},
   saveRules: async (r) => { rules = r; emit(); },
   saveSettings: async (s) => { settings = { ...settings, ...s }; emit(); },

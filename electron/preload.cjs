@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('tributary', {
   setFlagged: (key, flagged) => call('mail:flag', key, flagged),
   move: (key, kind) => call('mail:move', key, kind),
   openExternal: (url) => call('open:external', url),
+  getAppInfo: () => call('app:info'),
+  checkForUpdates: () => call('app:checkUpdate'),
   onState: (fn) => {
     const h = (_e, s) => fn(s);
     ipcRenderer.on('state', h);

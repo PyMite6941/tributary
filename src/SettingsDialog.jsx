@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Trash2, AlertCircle, LogIn, KeyRound, Loader2 } from 'lucide-react';
+import { RefreshCw, Trash2, AlertCircle, LogIn, KeyRound, Loader2, CheckCircle2, ArrowUpCircle } from 'lucide-react';
 import Modal from './Modal.jsx';
 import KeysSection from './KeysSection.jsx';
-import { api } from './api.js';
+import { api, params } from './api.js';
 
 const PROVIDER_NAMES = { gmail: 'Gmail', outlook: 'Outlook', yahoo: 'Yahoo', icloud: 'iCloud', aol: 'AOL', proton: 'Proton', custom: 'IMAP' };
 const STATUS_LABEL = { online: 'connected', connecting: 'connecting…', error: 'retrying', reauth: 'needs sign-in', offline: 'offline' };
@@ -95,9 +95,81 @@ function AccountRow({ a, onError }) {
   );
 }
 
+const LINKS = [
+  ['Website', 'https://pymite6941.github.io/tributary/'],
+  ['Setup guide', 'https://pymite6941.github.io/tributary/setup.html'],
+  ['Report a bug', 'https://github.com/PyMite6941/tributary/issues/new/choose'],
+  ['Source code', 'https://github.com/PyMite6941/tributary'],
+];
+
+function About({ info, onError }) {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+  const check = async () => {
+    setBusy(true);
+    try {
+      setResult(await api.checkForUpdates());
+    } catch (e) {
+      onError(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <h4 id="about">About</h4>
+      <div className="about">
+        <div className="about-line">
+          <span className="about-logo" />
+          <div className="grow">
+            <b>Tributary</b> <span className="muted">v{info?.version || '…'}</span>
+            <div className="muted small">Free and open source (MIT). No account, no server, no telemetry.</div>
+          </div>
+          <button className="btn small" onClick={check} disabled={busy}>
+            {busy ? <Loader2 size={13} className="spin" /> : <RefreshCw size={13} />} Check for updates
+          </button>
+        </div>
+        {result && (
+          <div className="small about-result">
+            {result.newer ? (
+              <>
+                <ArrowUpCircle size={13} className="accent" /> Version {result.latest} is available.{' '}
+                <a href="#" onClick={(e) => (e.preventDefault(), api.openExternal(result.url))}>
+                  Download it
+                </a>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 size={13} className="ok" /> You're on the latest version.
+              </>
+            )}
+          </div>
+        )}
+        <div className="about-links small">
+          {LINKS.map(([label, url]) => (
+            <a key={url} href="#" onClick={(e) => (e.preventDefault(), api.openExternal(url))}>
+              {label}
+            </a>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function SettingsDialog({ state, onClose, onError }) {
   const [s, setS] = useState(state.settings);
+  const [info, setInfo] = useState(null);
+  useEffect(() => {
+    api.getAppInfo().then(setInfo).catch(() => {});
+  }, []);
+  // Screenshot view "about" scrolls to the bottom section.
+  useEffect(() => {
+    // Waits a beat so the keys list above has loaded and the scroll lands on the right spot.
+    if (info && params.get('view') === 'about') setTimeout(() => document.getElementById('about')?.scrollIntoView(), 400);
+  }, [info]);
   const toggle = (k) => (e) => setS({ ...s, [k]: e.target.checked });
+  const osName = info?.platform === 'darwin' ? 'your Mac' : 'Windows';
 
   const save = async () => {
     try {
@@ -155,12 +227,24 @@ export default function SettingsDialog({ state, onClose, onError }) {
           <input type="checkbox" checked={s.minimizeToTray} onChange={toggle('minimizeToTray')} />
           Keep running in the tray when the window is closed
         </label>
+        {info?.canStartAtLogin && (
+          <label className="check">
+            <input type="checkbox" checked={!!s.openAtLogin} onChange={toggle('openAtLogin')} />
+            Start Tributary when I sign in to {osName} <span className="muted">(opens in the tray)</span>
+          </label>
+        )}
+        <label className="check">
+          <input type="checkbox" checked={s.checkForUpdates !== false} onChange={toggle('checkForUpdates')} />
+          Tell me when a new version is out <span className="muted">(checks GitHub once a day)</span>
+        </label>
         <label className="inline">
           Messages kept per inbox
           <input type="number" min={50} max={5000} step={50} value={s.messagesPerAccount} onChange={(e) => setS({ ...s, messagesPerAccount: e.target.value })} />
         </label>
 
         <KeysSection onError={onError} />
+
+        <About info={info} onError={onError} />
       </div>
     </Modal>
   );

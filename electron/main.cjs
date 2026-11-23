@@ -6,6 +6,7 @@ const providers = require('./providers.cjs');
 const oauth = require('./oauth.cjs');
 const { evaluate } = require('./rules.cjs');
 const { AccountSession, testConnection } = require('./mail.cjs');
+const updates = require('./updates.cjs');
 
 const DEV_URL = process.env.VITE_DEV_URL;
 // TRIBUTARY_DEMO=1 shows sample data instead of real accounts (for screenshots / demos).
@@ -18,6 +19,10 @@ app.setAppUserModelId('dev.pymite.tributary'); // required for Windows toast not
 // Separate profile for tests / screenshots so they never touch your real accounts, keys or .env.
 if (process.env.TRIBUTARY_USER_DATA) app.setPath('userData', path.resolve(process.env.TRIBUTARY_USER_DATA));
 const VIEW = process.env.TRIBUTARY_DEMO_VIEW;
+// Launched by "Start at login": open in the tray instead of popping a window over the desktop.
+const STARTED_HIDDEN = process.argv.includes('--hidden') || (process.platform === 'darwin' && app.getLoginItemSettings().wasOpenedAsHidden);
+// Login items point at the installed executable; registering a dev checkout's electron.exe would be wrong.
+const CAN_START_AT_LOGIN = app.isPackaged && (process.platform === 'win32' || process.platform === 'darwin');
 
 let win = null;
 let tray = null;
@@ -27,6 +32,7 @@ let rules = [];
 let settings = {};
 const sessions = new Map(); // accountId -> AccountSession
 const tokenCache = new Map(); // accountId -> { accessToken, expiresAt }
+let updateInfo = null; // last result of the GitHub release check
 
 // ---------- auth ----------
 
@@ -182,7 +188,7 @@ function buildState() {
   }
   messages.sort((a, b) => (a.date < b.date ? 1 : -1));
   const keyList = oauth.keys().list();
-  return { accounts: accounts.map((a) => publicAccount(a, keyList)), rules, settings, messages };
+  return { accounts: accounts.map((a) => publicAccount(a, keyList)), rules, settings, messages, update: updateInfo };
 }
 
 let broadcastTimer = null;
@@ -199,7 +205,7 @@ function broadcast() {
 
 // ---------- window + tray ----------
 
-function createWindow() {
+function createWindow({ hidden = false } = {}) {
   win = new BrowserWindow({
     width: 1360,
     height: 860,
@@ -218,7 +224,7 @@ function createWindow() {
       // Screenshot mode renders offscreen: a hidden or occluded window never paints, so capturePage would hang.
       ...(SHOT ? { offscreen: true } : {}),
     },
-    ...(SHOT ? { show: false } : {}),
+    show: !SHOT && !hidden,
   });
 
   // Links clicked in an email open in the real browser; nothing navigates the app window.
@@ -463,10 +469,19 @@ function registerIpc() {
 
   handle('settings:save', async (next) => {
     const limitChanged = next.messagesPerAccount !== settings.messagesPerAccount;
+    const loginChanged = 'openAtLogin' in next && !!next.openAtLogin !== !!settings.openAtLogin;
     settings = { ...settings, ...next };
     store.saveSettings(settings);
     if (limitChanged) for (const s of sessions.values()) s.limit = settings.messagesPerAccount;
+    if (loginChanged) applyLoginItem();
     broadcast();
+  });
+
+  handle('app:info', () => ({ version: app.getVersion(), platform: process.platform, canStartAtLogin: CAN_START_AT_LOGIN }));
+  handle('app:checkUpdate', async () => {
+    updateInfo = await updates.check(app.getVersion());
+    broadcast();
+    return updateInfo;
   });
 
   handle('mail:body', async (key) => {
@@ -490,6 +505,25 @@ function registerIpc() {
   });
 }
 
+function applyLoginItem() {
+  if (!CAN_START_AT_LOGIN) return;
+  app.setLoginItemSettings({ openAtLogin: !!settings.openAtLogin, openAsHidden: true, args: ['--hidden'] });
+}
+
+// One quiet check shortly after launch, then daily. Failures (offline, GitHub down) are ignored.
+function scheduleUpdateChecks() {
+  if (DEMO || SHOT || !app.isPackaged) return;
+  const run = async () => {
+    if (!settings.checkForUpdates) return;
+    try {
+      updateInfo = await updates.check(app.getVersion());
+      broadcast();
+    } catch {}
+  };
+  setTimeout(run, 15_000);
+  setInterval(run, 24 * 60 * 60_000).unref();
+}
+
 const PALETTE = ['#4f8cff', '#2bb39a', '#e0a33a', '#d6587a', '#9a6bff', '#47b4d6', '#e2734a', '#7cb342'];
 function pickColor() {
   return PALETTE[accounts.length % PALETTE.length];
@@ -506,9 +540,10 @@ if (!SHOT && !app.requestSingleInstanceLock()) {
     rules = store.loadRules();
     settings = store.loadSettings();
     registerIpc();
-    createWindow();
+    createWindow({ hidden: STARTED_HIDDEN && settings.minimizeToTray });
     if (!SHOT) createTray();
     if (!DEMO) accounts.forEach(startSession);
+    scheduleUpdateChecks();
   });
   app.on('before-quit', () => {
     quitting = true;

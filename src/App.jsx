@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { Search, X, AlertCircle } from 'lucide-react';
+import { Search, X, AlertCircle, ArrowUpCircle } from 'lucide-react';
 import { api, params } from './api.js';
 import Sidebar from './Sidebar.jsx';
 import MessageList from './MessageList.jsx';
@@ -43,7 +43,7 @@ export default function App() {
   const [view, setView] = useState('all');
   const [selected, setSelected] = useState(() => params.get('view') === 'reader' ? 'a2:1' : null);
   const [query, setQuery] = useState('');
-  const [dialog, setDialog] = useState(() => ({ rules: 'rules', account: 'account', settings: 'settings', keys: 'settings' })[params.get('view')] || null); // 'account' | 'rules' | 'settings'
+  const [dialog, setDialog] = useState(() => ({ rules: 'rules', account: 'account', settings: 'settings', keys: 'settings', about: 'settings' })[params.get('view')] || null); // 'account' | 'rules' | 'settings'
   const [ruleDraft, setRuleDraft] = useState(null); // prefilled rule when opening the rules dialog
   const [toast, setToast] = useState(null);
 
@@ -245,6 +245,19 @@ export default function App() {
           </span>
           <button className="btn small primary" onClick={() => setDialog('settings')}>
             Fix
+          </button>
+        </div>
+      )}
+
+      {state.update?.newer && state.settings.checkForUpdates !== false && state.settings.dismissedUpdate !== state.update.latest && !dialog && (
+        <div className="update-banner" role="status">
+          <ArrowUpCircle size={15} />
+          <span>Tributary {state.update.latest} is available.</span>
+          <button className="btn small primary" onClick={() => api.openExternal(state.update.url)}>
+            Download
+          </button>
+          <button className="icon-btn" title="Dismiss" onClick={() => api.saveSettings({ dismissedUpdate: state.update.latest }).catch(showError)}>
+            <X size={14} />
           </button>
         </div>
       )}

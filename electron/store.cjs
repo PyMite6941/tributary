@@ -40,6 +40,9 @@ const DEFAULT_SETTINGS = {
   blockRemoteImages: true,  // tracking pixels stay off until you ask
   messagesPerAccount: 300,  // how much INBOX history to cache per account
   minimizeToTray: true,
+  openAtLogin: false,       // start with the OS, straight to the tray (Windows/macOS installs)
+  checkForUpdates: true,    // ask GitHub's public releases API once a day; nothing personal is sent
+  dismissedUpdate: '',      // version whose "update available" banner you closed
 };
 
 module.exports = {
