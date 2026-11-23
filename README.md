@@ -46,6 +46,8 @@ You stay signed in after that. Tributary refreshes sign-ins in the background. I
 - **Rules across all accounts.** Match on sender, sender domain, recipient, subject or account using *contains / is / starts with / ends with / regex*. A rule can put mail in a sidebar view, notify you, mark it read, or keep it out of "All inboxes".
 - **Priority senders.** One click turns on desktop notifications for a sender, whichever account they email.
 - **Private by design.** No Tributary server, no account and no telemetry. The app talks directly to your providers. Passwords and sign-in tokens are encrypted with your OS keystore. Email HTML renders without scripts, and remote images (tracking pixels) are blocked until you allow them.
+- **Your own sign-in keys.** Keep several Google/Microsoft app keys in a local `.env`, attach plan, cost and limits, see usage, and auto-switch new sign-ins when one runs out ([details](#sign-in-keys-oauth-client-ids-in-env)).
+- **Start at sign-in and update notices.** Optionally starts with Windows/macOS in the tray. Once a day it checks GitHub's public releases API and tells you when there's a new version (switch it off in Settings).
 - **Keyboard shortcuts.** `j`/`k` move · `e` archive · `#` delete · `s` star · `u` unread · `/` search.
 
 **Not yet:** writing or replying to email, folders other than the inbox, and searching inside message bodies. See [issues](https://github.com/PyMite6941/tributary/issues) for what's planned.

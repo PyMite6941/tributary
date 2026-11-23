@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { RefreshCw, Trash2, AlertCircle, LogIn, KeyRound, Loader2, CheckCircle2, ArrowUpCircle } from 'lucide-react';
 import Modal from './Modal.jsx';
 import KeysSection from './KeysSection.jsx';
-import { api, params } from './api.js';
+import { api } from './api.js';
 
 const PROVIDER_NAMES = { gmail: 'Gmail', outlook: 'Outlook', yahoo: 'Yahoo', icloud: 'iCloud', aol: 'AOL', proton: 'Proton', custom: 'IMAP' };
 const STATUS_LABEL = { online: 'connected', connecting: 'connecting…', error: 'retrying', reauth: 'needs sign-in', offline: 'offline' };
@@ -117,7 +117,7 @@ function About({ info, onError }) {
   };
   return (
     <>
-      <h4 id="about">About</h4>
+      <h4>About</h4>
       <div className="about">
         <div className="about-line">
           <span className="about-logo" />
@@ -163,11 +163,6 @@ export default function SettingsDialog({ state, onClose, onError }) {
   useEffect(() => {
     api.getAppInfo().then(setInfo).catch(() => {});
   }, []);
-  // Screenshot view "about" scrolls to the bottom section.
-  useEffect(() => {
-    // Waits a beat so the keys list above has loaded and the scroll lands on the right spot.
-    if (info && params.get('view') === 'about') setTimeout(() => document.getElementById('about')?.scrollIntoView(), 400);
-  }, [info]);
   const toggle = (k) => (e) => setS({ ...s, [k]: e.target.checked });
   const osName = info?.platform === 'darwin' ? 'your Mac' : 'Windows';
 
