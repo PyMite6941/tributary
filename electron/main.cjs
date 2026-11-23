@@ -19,8 +19,6 @@ app.setAppUserModelId('dev.pymite.tributary'); // required for Windows toast not
 // Separate profile for tests / screenshots so they never touch your real accounts, keys or .env.
 if (process.env.TRIBUTARY_USER_DATA) app.setPath('userData', path.resolve(process.env.TRIBUTARY_USER_DATA));
 const VIEW = process.env.TRIBUTARY_DEMO_VIEW;
-// Launched by "Start at login": open in the tray instead of popping a window over the desktop.
-const STARTED_HIDDEN = process.argv.includes('--hidden') || (process.platform === 'darwin' && app.getLoginItemSettings().wasOpenedAsHidden);
 // Login items point at the installed executable; registering a dev checkout's electron.exe would be wrong.
 const CAN_START_AT_LOGIN = app.isPackaged && (process.platform === 'win32' || process.platform === 'darwin');
 
@@ -505,9 +503,38 @@ function registerIpc() {
   });
 }
 
+// Windows keys the Run entry by `name` + `args`, so set and query with the same values. The name is fixed
+// so build/installer.nsh can delete the entry on uninstall.
+const LOGIN_ITEM = { name: 'Tributary', args: ['--hidden'] };
+
 function applyLoginItem() {
   if (!CAN_START_AT_LOGIN) return;
-  app.setLoginItemSettings({ openAtLogin: !!settings.openAtLogin, openAsHidden: true, args: ['--hidden'] });
+  app.setLoginItemSettings({ ...LOGIN_ITEM, openAtLogin: !!settings.openAtLogin, openAsHidden: true });
+}
+
+// Whether our entry is registered and enabled. On Windows, Electron drops `args` when it reads the Run key
+// back, so getLoginItemSettings(LOGIN_ITEM).openAtLogin is always false; match launchItems by name instead.
+function loginItemOn() {
+  const s = app.getLoginItemSettings();
+  if (!Array.isArray(s.launchItems)) return !!s.openAtLogin; // macOS
+  const item = s.launchItems.find((i) => i.name === LOGIN_ITEM.name);
+  return !!item && item.enabled !== false; // enabled=false: switched off in Task Manager
+}
+
+// The OS is the source of truth: the user can turn the entry off in Task Manager / Login Items.
+function syncLoginItem() {
+  if (!CAN_START_AT_LOGIN) return;
+  const on = loginItemOn();
+  if (on !== !!settings.openAtLogin) {
+    settings = { ...settings, openAtLogin: on };
+    store.saveSettings(settings);
+  }
+}
+
+// Launched by "Start at login": open in the tray instead of popping a window over the desktop.
+function startedHidden() {
+  if (process.argv.includes('--hidden')) return true;
+  return process.platform === 'darwin' && !!app.getLoginItemSettings().wasOpenedAsHidden;
 }
 
 // One quiet check shortly after launch, then daily. Failures (offline, GitHub down) are ignored.
@@ -540,7 +567,8 @@ if (!SHOT && !app.requestSingleInstanceLock()) {
     rules = store.loadRules();
     settings = store.loadSettings();
     registerIpc();
-    createWindow({ hidden: STARTED_HIDDEN && settings.minimizeToTray });
+    syncLoginItem();
+    createWindow({ hidden: !SHOT && startedHidden() });
     if (!SHOT) createTray();
     if (!DEMO) accounts.forEach(startSession);
     scheduleUpdateChecks();

@@ -249,7 +249,7 @@ export default function App() {
         </div>
       )}
 
-      {state.update?.newer && state.settings.checkForUpdates !== false && state.settings.dismissedUpdate !== state.update.latest && !dialog && (
+      {state.update?.newer && state.settings.checkForUpdates !== false && state.settings.dismissedUpdate !== state.update.latest && !dialog && !toast && (
         <div className="update-banner" role="status">
           <ArrowUpCircle size={15} />
           <span>Tributary {state.update.latest} is available.</span>
