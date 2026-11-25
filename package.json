@@ -1,7 +1,7 @@
 {
   "name": "tributary",
   "productName": "Tributary",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Every inbox, one stream. A local-first desktop client that unifies Gmail, Outlook, Yahoo, iCloud, Proton and any IMAP inbox, with cross-account rules and per-sender notifications.",
   "main": "electron/main.cjs",
   "private": true,
