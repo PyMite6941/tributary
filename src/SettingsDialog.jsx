@@ -96,6 +96,9 @@ function AccountRow({ a, onError, onRemoved }) {
   );
 }
 
+const keystoreName = (platform) =>
+  ({ darwin: "your Mac's Keychain", linux: "your system keyring (libsecret)" })[platform] || "Windows' own keystore (DPAPI)";
+
 const LINKS = [
   ['Website', 'https://pymite6941.github.io/tributary/'],
   ['Setup guide', 'https://pymite6941.github.io/tributary/setup.html'],
@@ -203,7 +206,7 @@ export default function SettingsDialog({ state, onClose, onError, onErased }) {
         </div>
         <AccessHints hints={removed} />
         <p className="muted small">
-          App passwords and sign-in tokens are encrypted with Windows' own keystore (DPAPI) and stay signed in across restarts.
+          App passwords and sign-in tokens are encrypted with {keystoreName(info?.platform)} and stay signed in across restarts.
           Access tokens refresh automatically. If a provider revokes access, the inbox shows “needs sign-in” here instead of
           retrying with bad credentials.
         </p>

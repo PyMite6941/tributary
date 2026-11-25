@@ -23,8 +23,26 @@
     <h1>Setup guide</h1>
     <p>Every provider below speaks IMAP, and Tributary uses it for all of them. The difference is how you log in. Most providers no longer accept your normal password from third-party apps, so you'll create an <strong>app password</strong> (a separate password just for Tributary) or sign in through your browser.</p>
     <div class="toc">
-      <a href="#install">Installing</a><a href="#gmail">Gmail</a><a href="#outlook">Outlook / Hotmail</a><a href="#yahoo">Yahoo</a><a href="#icloud">iCloud</a><a href="#aol">AOL</a><a href="#proton">Proton</a><a href="#other">Other IMAP</a><a href="#rules">Rules</a><a href="#trouble">Troubleshooting</a><a href="#uninstall">Uninstalling</a>
+      <a href="#install">Installing</a><a href="#gmail">Gmail</a><a href="#outlook">Outlook / Hotmail</a><a href="#yahoo">Yahoo</a><a href="#icloud">iCloud</a><a href="#aol">AOL</a><a href="#proton">Proton</a><a href="#other">Other IMAP</a><a href="#rules">Rules</a><a href="#oauth">Browser sign-in</a><a href="#trouble">Troubleshooting</a><a href="#uninstall">Uninstalling</a>
     </div>
+
+    <h2 id="install">Installing</h2>
+    <p>Download the file for your computer from <a href="https://github.com/PyMite6941/tributary/releases/latest">Releases</a>:</p>
+    <ul>
+      <li><strong>Windows 10/11:</strong> <code>Tributary-Setup-x.y.z.exe</code>.</li>
+      <li><strong>Mac with Apple silicon (M1 and later):</strong> <code>Tributary-x.y.z-arm64.dmg</code>. <strong>Mac with Intel:</strong> <code>Tributary-x.y.z-x64.dmg</code>. Not sure? Apple menu → <em>About This Mac</em> shows “Chip: Apple M…” or “Processor: Intel”.</li>
+      <li><strong>Linux:</strong> the <code>.AppImage</code> runs on any distro; the <code>.deb</code> is for Debian and Ubuntu.</li>
+    </ul>
+    <p>The builds aren't code-signed yet, so your system warns you the first time:</p>
+    <ul>
+      <li><strong>Windows:</strong> on <em>“Windows protected your PC”</em>, click <strong>More info → Run anyway</strong>.</li>
+      <li><strong>macOS:</strong> drag Tributary to Applications and open it. When macOS blocks it, open <strong>System Settings → Privacy &amp; Security</strong>, scroll down and click <strong>Open Anyway</strong>. If macOS says the app <em>“is damaged”</em>, run <code>xattr -dr com.apple.quarantine /Applications/Tributary.app</code> in Terminal and open it again.</li>
+      <li><strong>Linux:</strong> <code>chmod +x Tributary-*.AppImage</code> and run it, or <code>sudo apt install ./Tributary-*.deb</code>.</li>
+    </ul>
+    <h3 id="updating">Updating</h3>
+    <p>When a new version is out, Tributary shows a banner; <strong>Settings → About → Check for updates</strong> checks right away. Download the new installer and run it over the old one. Your inboxes, rules, settings and sign-in keys are kept. The check only asks GitHub for the latest version number; turn it off with <em>Tell me when a new version is out</em> in Settings.</p>
+    <h3 id="start-at-login">Start at login</h3>
+    <p>On Windows and macOS, <strong>Settings → Start Tributary when I sign in</strong> starts it in the tray, so notifications work without opening the window. You can also turn it off in Task Manager → Startup apps (Windows) or System Settings → General → Login Items (macOS); Settings follows what you choose there.</p>
 
     <h2 id="gmail">Gmail</h2>
     <ol>
@@ -53,14 +71,6 @@
 
     <h2 id="aol">AOL Mail</h2>
     <p>Same as Yahoo. In AOL Account Security, use <strong>Generate app password</strong>.</p>
-
-    <h2 id="install">Installing</h2>
-    <p>Download the installer for your system from <a href="https://github.com/PyMite6941/tributary/releases/latest">Releases</a>. The builds aren't code-signed yet:</p>
-    <ul>
-      <li><strong>Windows:</strong> if you see <em>“Windows protected your PC”</em>, click <strong>More info → Run anyway</strong>.</li>
-      <li><strong>macOS:</strong> right-click Tributary in Applications and choose <strong>Open</strong> the first time.</li>
-      <li><strong>Linux:</strong> make the <code>.AppImage</code> executable (<code>chmod +x</code>), or install the <code>.deb</code>.</li>
-    </ul>
 
     <h2 id="proton">Proton Mail</h2>
     <p>Proton encrypts mail end-to-end, so it can't offer plain IMAP from its servers. Instead it ships <a href="https://proton.me/mail/bridge">Proton Mail Bridge</a>, a small program that runs on your computer, decrypts your mail locally and serves it over IMAP on <code>127.0.0.1</code>. Bridge needs a paid Proton plan.</p>
@@ -127,7 +137,7 @@ MICROSOFT_CLIENT_ID=00000000-0000-0000-0000-000000000000</code></pre>
 
     <h2 id="staying-signed-in">Staying signed in</h2>
     <ul>
-      <li>After you sign in, Tributary keeps the provider's long-lived <em>refresh token</em> (or your app password), encrypted with Windows' DPAPI keystore. It never stores your real account password, and it never saves cookies.</li>
+      <li>After you sign in, Tributary keeps the provider's long-lived <em>refresh token</em> (or your app password), encrypted with your system's keystore (Windows DPAPI, macOS Keychain or Linux libsecret). It never stores your real account password, and it never saves cookies.</li>
       <li>Short-lived access tokens refresh in the background before they expire, so you stay signed in across restarts and reboots.</li>
       <li>If a provider revokes access (you changed your password, removed the app from your Google/Microsoft account, or a Google test-mode token hit its 7-day limit), Tributary <strong>stops trying</strong> instead of hammering the server with bad credentials. You get one notification, a banner in the app, and a <em>Sign in again</em> button in Settings. Your rules, colors and cached mail are kept.</li>
     </ul>

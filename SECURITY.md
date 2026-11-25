@@ -11,9 +11,14 @@ Tributary handles email credentials, so security reports are very welcome.
 - Rendering untrusted email HTML (`src/Reader.jsx`: sandboxed iframe with no scripts and a per-message CSP)
 - The IPC surface between the UI and the main process (`electron/preload.cjs`, `electron/main.cjs`)
 - TLS handling (certificate checks are skipped **only** for loopback hosts, for Proton Mail Bridge)
+- Sign-in keys (`electron/keys.cjs`: parsing and rewriting the local `.env`)
+- Removing data (`electron/erase.cjs`, `build/installer.nsh`: erase must delete only Tributary's own files)
+- The update check (`electron/updates.cjs`)
 
 ## Design notes
 
 - There is no Tributary server. Mail goes directly between your computer and your providers.
-- No telemetry or analytics.
+- No telemetry or analytics. Besides your mail providers, the app only contacts `api.github.com` once a day for the latest version number (optional), and Google's revoke endpoint when you remove a Google inbox.
+- Builds aren't code-signed yet, and the app never updates itself: it links to the GitHub release instead.
+- Sign-in keys in `.env` are public-client IDs (PKCE + loopback redirect); they can't read mail on their own.
 - Message bodies are fetched on demand and are not written to disk. Only sender, subject, date and flags for recent inbox mail are cached locally.

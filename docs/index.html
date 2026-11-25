@@ -50,7 +50,7 @@
         <div class="card">
           <span class="step">1</span>
           <h3>Download &amp; install</h3>
-          <p>Grab the installer from <a href="https://github.com/PyMite6941/tributary/releases/latest">Releases</a>. It isn't code-signed yet, so Windows may say <em>“Windows protected your PC”</em>. Click <strong>More info → Run anyway</strong>.</p>
+          <p>Grab the installer from <a href="https://github.com/PyMite6941/tributary/releases/latest">Releases</a>. It isn't code-signed yet, so Windows may say <em>“Windows protected your PC”</em>. Click <strong>More info → Run anyway</strong>. <a href="setup.html#install">macOS &amp; Linux steps</a></p>
         </div>
         <div class="card">
           <span class="step">2</span>
@@ -150,11 +150,14 @@
         <table>
           <thead><tr><th>What</th><th>Where it lives</th></tr></thead>
           <tbody>
-            <tr><td>App passwords &amp; sign-in tokens</td><td>Encrypted with your OS keystore (Windows DPAPI / macOS Keychain) in your user profile</td></tr>
+            <tr><td>App passwords &amp; sign-in tokens</td><td>Encrypted with your OS keystore (Windows DPAPI / macOS Keychain / Linux libsecret) in your user profile</td></tr>
             <tr><td>Message list cache</td><td>Sender, subject and date for recent INBOX mail, stored as local JSON so startup is instant</td></tr>
             <tr><td>Message bodies</td><td>Fetched from your provider when you open a message and never written to disk</td></tr>
             <tr><td>Rules &amp; settings</td><td>Local JSON in your user profile</td></tr>
+            <tr><td>Sign-in keys</td><td>A <code>.env</code> file in your user profile that you can open and edit</td></tr>
+            <tr><td>Update check</td><td>Once a day, asks GitHub's public releases API for the latest version number. Nothing about you is sent, and you can turn it off</td></tr>
             <tr><td>Analytics / telemetry</td><td>None</td></tr>
+            <tr><td>Leaving</td><td><em>Erase all data</em> signs out, revokes Google sign-ins and deletes everything Tributary stored. <a href="setup.html#uninstall">Uninstalling</a></td></tr>
           </tbody>
         </table>
       </div>
@@ -164,7 +167,7 @@
   <footer>
     <div class="wrap">
       <span>Tributary · MIT licensed · built by <a href="https://github.com/PyMite6941">PyMite6941</a></span>
-      <span><a href="setup.html">Setup guide</a> · <a href="https://github.com/PyMite6941/tributary/issues">Report an issue</a></span>
+      <span><a href="setup.html">Setup guide</a> · <a href="https://github.com/PyMite6941/tributary/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/PyMite6941/tributary/issues">Report an issue</a></span>
     </div>
   </footer>
 </body>

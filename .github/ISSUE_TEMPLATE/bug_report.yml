@@ -26,7 +26,7 @@ body:
     id: version
     attributes:
       label: Tributary version and OS
-      placeholder: 0.1.0 on Windows 11
+      placeholder: 0.2.0 on Windows 11 (Settings → About shows the version)
     validations:
       required: true
   - type: textarea
